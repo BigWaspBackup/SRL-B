@@ -1,3 +1,3 @@
-## [8.0.0](https://github.com/BigWaspBackup/SRL-B/releases/tag/v8.0.0) (2026-07-09)
+## [8.0.1](https://github.com/BigWaspBackup/SRL-B/releases/tag/v8.0.1) (2026-07-12)
 ### B.A.S.H release
-* Initial B.A.S.H fork of SRL-T
+* Updated chunks and readme

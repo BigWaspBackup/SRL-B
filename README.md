@@ -1,24 +1,3 @@
-SRL Resource Library
-======================
-SRL is a library that provides an API for writing bots in Simba for the game Old School RuneScape.
-
-Documentation is available [here](https://torwent.github.io/SRL-T)
-
-This is the SRL version used by [WaspLib](https://github.com/Torwent/WaspLib) and it's the main one used at [WaspSctipts](https://waspscripts.com).
-
-You can find the official SRL version [here](
-https://github.com/Villavu/SRL-Development).
-
-
-## Features
-<img src="docs/images/resizable.png" width="738" height="600">\
-*Resizable mode*
-
-<img src="docs/images/mm2ms.png" width="734" height="662">\
-*Minimap to mainscreen projection*
-
-<img src="docs/images/walker.png">\
-*Detecting position on the world map*
-
-<img src="docs/images/webber.png" width="650" height="650">\
-*Web walking system (does not handle obstacles)*
+Legal Disclaimer & Trademark Notice: This project is purely educational and intended for automation research using color recognition. All scripts run via the Simba framework, interfacing purely with standard display output and simulated hardware inputs. Use of macro software may violate third-party Terms of Service; use at your own risk.
+No Affiliation: This project is completely independent and is not affiliated, associated, authorized, endorsed by, or in any way officially connected with Jagex Ltd, RuneScape, Old School RuneScape, or any of their subsidiaries or affiliates.*
+Trademark Notice: All game titles, assets, imagery, text, and graphics related to Old School RuneScape and RuneScape are registered trademarks and copyright material of Jagex Ltd. Any in-game screenshots, icons, or visual assets used within this community or repository are property of their respective owners and are utilized here strictly under nominative fair use for identification and educational automation research purposes.*

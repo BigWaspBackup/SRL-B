@@ -30,7 +30,8 @@ type
     STRONGHOLD_SLAYER_CAVE,
     TEMPOROSS_COVE,
     VARROCK,
-    WINTERTODT
+    WINTERTODT,
+    DEEPFIN_POINT
   );
 
 function ERSChunk.Get(planes: TIntegerArray = []): TRSMapChunk; constref;
@@ -62,6 +63,7 @@ begin
     ERSChunk.TEMPOROSS_COVE         : Result := Chunk(Box(47,46,47,46), 0);
     ERSChunk.VARROCK                : Result := Chunk(Box(49,54,50,53), 0);
     ERSChunk.WINTERTODT             : Result := Chunk(Box(24,63,26,61), 0);
+    ERSChunk.DEEPFIN_POINT          : Result := Chunk(Box(29,44,31,42), 0);
   end;
 
   if planes <> [] then Result.Planes := planes;
@@ -95,7 +97,8 @@ EBankChunk is a enumerator that contains all bank chunks supported by WaspLib.
     SEERS_VILLAGE,
     VARROCK,
     WINTERTODT,
-    FOSSIL_ISLAND
+    FOSSIL_ISLAND,
+    DEEPFIN_POINT
   );
 
 function EBankChunk.Name(): String; constref;
@@ -122,5 +125,6 @@ begin
     EBankChunk.VARROCK:         Result := ERSChunk.VARROCK.Get();
     EBankChunk.WINTERTODT:      Result := ERSChunk.WINTERTODT.Get();
     EBankChunk.FOSSIL_ISLAND:   Result := ERSChunk.FOSSIL_ISLAND.Get();
+    EBankChunk.DEEPFIN_POINT:   Result := ERSChunk.DEEPFIN_POINT.Get();
   end;
 end;

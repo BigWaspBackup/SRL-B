@@ -79,7 +79,7 @@ type
 (*
 (EBankChunk)=
 ## type EBankChunk
-EBankChunk is a enumerator that contains all bank chunks supported by WaspLib.
+EBankChunk is a enumerator that contains all bank chunks supported by BashLib.
 *)
   EBankChunk = (
     AL_KHARID,
@@ -98,7 +98,29 @@ EBankChunk is a enumerator that contains all bank chunks supported by WaspLib.
     VARROCK,
     WINTERTODT,
     FOSSIL_ISLAND,
-    DEEPFIN_POINT
+    DEEPFIN_POINT,
+    BLAST_FURNACE,
+    BURGH_DE_ROTT,
+    CANIFIS,
+    FEROX_ENCLAVE,
+    HOSIDIUS,
+    LUMBRIDGE,
+    MOR_UL_REK,
+    MOTHERLOADE_MINE,
+    MOUNT_KARUULM,
+    MYTHS_GUILD,
+    NARDAH,
+    NEITIZNOT,
+    PISCARILIUS,
+    PORT_PHASMATYS,
+    ROGUES_DEN,
+    RUINS_OF_UNKAH,
+    SHILO_VILLAGE,
+    THE_ONYX_CREST,
+    THE_SUMMER_SHORE,
+    WARRIORS_GUILD,
+    YANILLE,
+    ZANARIS
   );
 
 function EBankChunk.Name(): String; constref;
@@ -109,22 +131,44 @@ end;
 function EBankChunk.Get(): TRSMapChunk;
 begin
   case Self of
-    EBankChunk.AL_KHARID:       Result := ERSChunk.AL_KHARID.Get();
-    EBankChunk.ARDOUGNE:        Result := ERSChunk.ARDOUGNE.Get();
-    EBankChunk.CASTLE_WARS:     Result := ERSChunk.CASTLE_WARS.Get();
-    EBankChunk.CATHERBY:        Result := ERSChunk.CATHERBY.Get();
-    EBankChunk.CRAFTING_GUILD:  Result := ERSChunk.CRAFTING_GUILD.Get();
-    EBankChunk.DRAYNOR_VILLAGE: Result := ERSChunk.DRAYNOR_VILLAGE.Get();
-    EBankChunk.EDGEVILLE:       Result := ERSChunk.EDGEVILLE.Get();
-    EBankChunk.FALADOR:         Result := ERSChunk.FALADOR.Get();
-    EBankChunk.GRAND_EXCHANGE:  Result := ERSChunk.VARROCK.Get();
-    EBankChunk.LUNAR_ISLE:      Result := ERSChunk.LUNAR_ISLE.Get();
-    EBankChunk.MINING_GUILD:    Result := ERSChunk.MINING_GUILD.Get();
-    EBankChunk.PRIFDDINAS:      Result := ERSChunk.PRIFDDINAS.Get();
-    EBankChunk.SEERS_VILLAGE:   Result := ERSChunk.SEERS_VILLAGE.Get();
-    EBankChunk.VARROCK:         Result := ERSChunk.VARROCK.Get();
-    EBankChunk.WINTERTODT:      Result := ERSChunk.WINTERTODT.Get();
-    EBankChunk.FOSSIL_ISLAND:   Result := ERSChunk.FOSSIL_ISLAND.Get();
-    EBankChunk.DEEPFIN_POINT:   Result := ERSChunk.DEEPFIN_POINT.Get();
+    EBankChunk.AL_KHARID:         Result := ERSChunk.AL_KHARID.Get();
+    EBankChunk.ARDOUGNE:          Result := ERSChunk.ARDOUGNE.Get();
+    EBankChunk.CASTLE_WARS:       Result := ERSChunk.CASTLE_WARS.Get();
+    EBankChunk.CATHERBY:          Result := ERSChunk.CATHERBY.Get();
+    EBankChunk.CRAFTING_GUILD:    Result := ERSChunk.CRAFTING_GUILD.Get();
+    EBankChunk.DRAYNOR_VILLAGE:   Result := ERSChunk.DRAYNOR_VILLAGE.Get();
+    EBankChunk.EDGEVILLE:         Result := ERSChunk.EDGEVILLE.Get();
+    EBankChunk.FALADOR:           Result := ERSChunk.FALADOR.Get();
+    EBankChunk.GRAND_EXCHANGE:    Result := ERSChunk.VARROCK.Get();
+    EBankChunk.LUNAR_ISLE:        Result := ERSChunk.LUNAR_ISLE.Get();
+    EBankChunk.MINING_GUILD:      Result := ERSChunk.MINING_GUILD.Get();
+    EBankChunk.PRIFDDINAS:        Result := ERSChunk.PRIFDDINAS.Get();
+    EBankChunk.SEERS_VILLAGE:     Result := ERSChunk.SEERS_VILLAGE.Get();
+    EBankChunk.VARROCK:           Result := ERSChunk.VARROCK.Get();
+    EBankChunk.WINTERTODT:        Result := ERSChunk.WINTERTODT.Get();
+    EBankChunk.FOSSIL_ISLAND:     Result := ERSChunk.FOSSIL_ISLAND.Get();
+    EBankChunk.DEEPFIN_POINT:     Result := ERSChunk.DEEPFIN_POINT.Get();
+    EBankChunk.BLAST_FURNACE:     Result := ERSChunk.BLAST_FURNACE.Get();
+    EBankChunk.LUMBRIDGE:         Result := ERSChunk.LUMBRIDGE.Get();
+    EBankChunk.MOTHERLOADE_MINE:  Result := ERSChunk.MOTHERLOADE_MINE.Get();
+    EBankChunk.MYTHS_GUILD:       Result := ERSChunk.MYTHS_GUILD.Get();
+    EBankChunk.ROGUES_DEN:        Result := ERSChunk.ROGUES_DEN.Get();
+    EBankChunk.RUINS_OF_UNKAH:    Result := ERSChunk.RUINS_OF_UNKAH.Get();
+    EBankChunk.BURGH_DE_ROTT:     Result := Chunk(Box(53,51,55,49), 0);
+    EBankChunk.CANIFIS:           Result := Chunk(Box(54,55,55,53), 0);
+    EBankChunk.FEROX_ENCLAVE:     Result := Chunk(Box(47,57,49,55), 0);
+    EBankChunk.HOSIDIUS:          Result := Chunk(Box(26,57,28,55), 0);
+    EBankChunk.MOR_UL_REK:        Result := Chunk(Box(36,81,40,78), 0);
+    EBankChunk.MOUNT_KARUULM:     Result := Chunk(Box(19,60,21,58), 0);
+    EBankChunk.NARDAH:            Result := Chunk(Box(52,46,54,44), 0);
+    EBankChunk.NEITIZNOT:         Result := Chunk(Box(35,60,37,58), 0);
+    EBankChunk.PISCARILIUS:       Result := Chunk(Box(27,59,29,57), 0);
+    EBankChunk.PORT_PHASMATYS:    Result := Chunk(Box(56,55,58,53), 0);
+    EBankChunk.SHILO_VILLAGE:     Result := Chunk(Box(43,47,45,45), 0);
+    EBankChunk.THE_ONYX_CREST:    Result := Chunk(Box(45,36,47,34), 0);
+    EBankChunk.THE_SUMMER_SHORE:  Result := Chunk(Box(48,38,50,36), 0);
+    EBankChunk.WARRIORS_GUILD:    Result := Chunk(Box(43,56,45,54), 0);
+    EBankChunk.YANILLE:           Result := Chunk(Box(40,49,42,47), 0);
+    EBankChunk.ZANARIS:           Result := Chunk(Box(36,70,39,67), 0);
   end;
 end;

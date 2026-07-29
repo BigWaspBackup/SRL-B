@@ -12,7 +12,7 @@ nor modify them if you don't quite understand them.
 
 {$DEFINE SRL_MAPLOADER_INCLUDED}
 {$IFNDEF SRL_OSR}
-  {$I SRL-T/osr.simba}
+  {$I SRL-B/osr.simba}
 {$ENDIF}
 
 {$I files/maps/map.graph}
@@ -130,27 +130,24 @@ begin
     ERSMap.NORMAL:
     begin
       cacheroot := Self.Cache + 'map' + DirectorySeparator;
-      cachename := cacheroot + ToStr(plane) + DirectorySeparator + chunk;
       zipPath := RSMAP_PATH + 'files' + DirectorySeparator + 'map.zip';
-      zipFile := ToStr(plane) + '/' + chunk + '.png';
     end;
 
     ERSMap.HEIGHT:
     begin
       cacheroot := Self.Cache + 'heightmap' + DirectorySeparator;
-      cachename := cacheroot + '0' + DirectorySeparator + chunk;
       zipPath := RSMAP_PATH + 'files' + DirectorySeparator + 'heightmap.zip';
-      zipFile := '0/' + chunk + '.png';
     end;
 
     ERSMap.COLLISION:
     begin
       cacheroot := Self.Cache + 'collision' + DirectorySeparator;
-      cachename := cacheroot + ToStr(plane) + DirectorySeparator + chunk;
       zipPath := RSMAP_PATH + 'files' + DirectorySeparator + 'collision.zip';
-      zipFile := ToStr(plane) + '/' + chunk + '.png';
     end;
   end;
+
+  cachename := cacheroot + ToStr(plane) + '-' + chunk;
+  zipFile := ToStr(plane) + '-' + chunk + '.png';
 
   Result.SetName(cachename);
 
@@ -207,14 +204,24 @@ var
   name, cacheroot, cachename, zipFile, zipPath, contents: String;
 begin
   case jsonType of
-    ERSMapJSON.OBJECTS: name := 'objects1400';
-    ERSMapJSON.NPCS:    name := 'npcs';
-  end;
+    ERSMapJSON.OBJECTS:
+    begin
+      name := 'objects1400';
+      cacheroot := Self.Cache + name + DirectorySeparator;
+      cachename := cacheroot + ToStr(plane) + '-' + chunk;
+      zipPath := RSMAP_PATH + 'files' + DirectorySeparator + name + '.zip';
+      zipFile := ToStr(plane) + '-' + chunk + '.json';
+    end;
 
-  cacheroot := Self.Cache + name + DirectorySeparator;
-  cachename := cacheroot + ToStr(plane) + DirectorySeparator + chunk;
-  zipPath := RSMAP_PATH + 'files' + DirectorySeparator + name + '.zip';
-  zipFile := ToStr(plane) + '/' + chunk + '.json';
+    ERSMapJSON.NPCS:
+    begin
+      name := 'npcs';
+      cacheroot := Self.Cache + name + DirectorySeparator;
+      cachename := cacheroot + ToStr(plane) + DirectorySeparator + chunk;
+      zipPath := RSMAP_PATH + 'files' + DirectorySeparator + name + '.zip';
+      zipFile := ToStr(plane) + '/' + chunk + '.json';
+    end;
+  end;
 
   if not FileExists(cachename + '.json') then
   begin

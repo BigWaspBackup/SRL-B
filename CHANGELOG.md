@@ -2,4 +2,4 @@
 ### B.A.S.H release
 * Updated to support latest items
 * Updated to support Wyrmscraig
-* Misc Fixes
+* Misc Fixes B

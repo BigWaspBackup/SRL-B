@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   documentation:
-    if: github.repository_owner == 'Torwent'
+    if: github.repository_owner == 'BigWaspBackup'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

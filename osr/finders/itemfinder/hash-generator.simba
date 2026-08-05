@@ -232,8 +232,23 @@ var
   current, hash, id: String;
   bmp: TMufasaBitmap;
   t: UInt64;
+  ids: TStringList;
+  i, written: Int32;
 begin
+  ids.Init();
   try
+    if not FileExists(PATH + 'id.txt') then
+    begin
+      WriteLn 'id.txt is missing - cannot align hash.txt rows.';
+      TerminateScript();
+    end;
+    ids.LoadFromFile(PATH + 'id.txt');
+    if ids.getCount() <= 0 then
+    begin
+      WriteLn 'id.txt is empty.';
+      TerminateScript();
+    end;
+
     if not DirectoryExists(TMP_PATH) then
     begin
       WriteLn 'unzipping... this will take a while.';
@@ -254,21 +269,36 @@ begin
       end;
 
     t := GetTickCount();
-
-    for current in Sorted(FindFiles(TMP_PATH + '\', ['.png']), @FileSort) do
+    written := 0;
+    
+    for i := 0 to ids.getCount() - 1 do
     begin
+      id := Trim(ids.getStrings(i));
+      if id = '' then
+      begin
+        WriteLn('Blank id.txt row at index ' + ToStr(i));
+        TerminateScript();
+      end;
+
+      current := TMP_PATH + DirectorySeparator + id + '.png';
+      if not FileExists(current) then
+      begin
+        WriteLn('Missing sprite for id ' + id + ': ' + current);
+        TerminateScript();
+      end;
+
       bmp.Init();
       bmp.LoadFromFile(current);
       bmp.Crop(0, 9, 35, 31);
 
       if (bmp.getWidth() <> 36) or (bmp.getHeight() <> 23) then
       begin
-        WriteLn(ExtractFileName(current), ' has wrong dimensions.');
+        WriteLn(ExtractFileName(current) + ' has wrong dimensions after crop (' +
+          ToStr(bmp.getWidth()) + 'x' + ToStr(bmp.getHeight()) +
+          '). Refusing to skip - that desyncs hash.txt.');
         bmp.Free();
-        Continue;
+        TerminateScript();
       end;
-
-      id := ExtractFileName(current).Before('.png');
 
       ClearItemBackground(bmp);
       hash := bmp.GetHash();
@@ -278,6 +308,7 @@ begin
         WriteLn 'Failed to write to hash';
         TerminateScript();
       end;
+      Inc(written);
 
       if not bmp.SaveToFile(MODDED_PATH + id + '.png') then
       begin
@@ -288,8 +319,15 @@ begin
       bmp.Free();
     end;
 
-    WriteLn('Hashing all files took: ', (GetTickCount()-t) div 1000, ' seconds.');
+    if written <> ids.getCount() then
+    begin
+      WriteLn('hash.txt rows (' + ToStr(written) + ') != id.txt rows (' + ToStr(ids.getCount()) + ')');
+      TerminateScript();
+    end;
+
+    WriteLn('Hashed ' + ToStr(written) + ' sprites in ' + ToStr((GetTickCount()-t) div 1000) + ' seconds.');
   finally
+    ids.Free();
     if CLEANUP then
     begin
       DeleteDirectory(TMP_PATH, False);

@@ -40,18 +40,54 @@ begin
 end;
 
 procedure TRSItemFinder.Setup();
+var
+  dbPath, zipKey, hashKey: String;
+  idCount, itemCount, hashCount: Int32;
+  idList, itemList, hashList: TStringList;
 begin
-  Self.IMAGES_ZIP  := {$macro CURRENT_DIRECTORY} + 'items-imgs.zip';
+  dbPath := {$macro CURRENT_DIRECTORY};
+  Self.IMAGES_ZIP  := dbPath + 'items-imgs.zip';
+
+  // Cache key must include hash.txt — same zip + replaced hashes used to keep
+  // stale lookup maps and break Equipment.Discover / Load from client.
+  zipKey := SHA1File(Self.IMAGES_ZIP).SubString(6);
+  hashKey := SHA1File(dbPath + 'hash.txt').SubString(6);
   Self.IMAGES_PATH := CACHE_DIR + 'itemfinder' + DirectorySeparator +
-                      SHA1File(Self.IMAGES_ZIP).SubString(6) +
-                      DirectorySeparator;
+                      zipKey + '_' + hashKey + DirectorySeparator;
 
   ForceDirectories(Self.IMAGES_PATH);
 
   Self.Name := 'ItemFinder';
   Self.Similarity := 0.999;
 
-  Self.Database.Setup('itemfinder',['id', 'item', 'hash'], {$macro CURRENT_DIRECTORY}, Self.IMAGES_PATH);
+  // Discover looks up client hashes by row index across id/item/hash.
+  // A short/wrong hash.txt (e.g. hash-generator skipped images) silently
+  // breaks Load-from-client to a handful of false matches.
+  idList.Init();
+  itemList.Init();
+  hashList.Init();
+  try
+    idList.LoadFromFile(dbPath + 'id.txt');
+    itemList.LoadFromFile(dbPath + 'item.txt');
+    hashList.LoadFromFile(dbPath + 'hash.txt');
+    idCount := idList.getCount();
+    itemCount := itemList.getCount();
+    hashCount := hashList.getCount();
+  finally
+    idList.Free();
+    itemList.Free();
+    hashList.Free();
+  end;
+
+  if (idCount <> itemCount) or (idCount <> hashCount) or (idCount <= 0) then
+    Self.Fatal(
+      'itemfinder database misaligned: id.txt=' + ToStr(idCount) +
+      ' item.txt=' + ToStr(itemCount) +
+      ' hash.txt=' + ToStr(hashCount) +
+      '. Re-run hash-generator.simba against items-imgs.zip (do not skip rows).'
+    );
+
+  Self.Database.Setup('itemfinder',['id', 'item', 'hash'], dbPath, Self.IMAGES_PATH);
   AddOnTerminate(@Self.Free);
 end;
 

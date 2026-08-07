@@ -1270,7 +1270,8 @@ function TRSWalkerV2.WebWalkEx(me: TPoint; destination: TPoint; waitUntilDistanc
     try
       Result := Self.WebGraph^.PathBetweenEx(me, destination, pathRandomness, 4, safe);
     except
-      if Assigned(Self.MapImage) and (Length(Self.WebGraph^.Nodes) > 0) then
+      // Only debug if flagged
+      if debug and Assigned(Self.MapImage) and (Length(Self.WebGraph^.Nodes) > 0) then
       begin
         bmp := Self.MapImage.Copy();
         tmp := Self.WebGraph^;

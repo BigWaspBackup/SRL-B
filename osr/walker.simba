@@ -1265,47 +1265,76 @@ function TRSWalkerV2.WebWalkEx(me: TPoint; destination: TPoint; waitUntilDistanc
     bmp: TMufasaBitmap;
     tmp: TWebGraphV2;
     closestMe, closestDest: TIntegerArray;
-    i: Int32;
+    i, attempt: Int32;
+    msg: String;
+    connected: Boolean;
   begin
-    try
-      Result := Self.WebGraph^.PathBetweenEx(me, destination, pathRandomness, 4, safe);
-    except
-      // Only debug if flagged
-      if debug and Assigned(Self.MapImage) and (Length(Self.WebGraph^.Nodes) > 0) then
-      begin
-        bmp := Self.MapImage.Copy();
-        tmp := Self.WebGraph^;
-
-        closestMe   := Self.WebGraph^.FindNearestNodes(me, 4);
-        closestDest := Self.WebGraph^.FindNearestNodes(destination, 4);
-
-        if (@Self.GetLocal <> nil) then
-        begin
-          tmp.Nodes := Self.GetLocal(tmp.Nodes);
-          me := Self.GetLocal([me])[0];
-          destination := Self.GetLocal([destination])[0];
-        end;
-
-        tmp.Draw(bmp);
-
-        for i := 0 to 3 do
-        begin
-          if i < Length(closestMe) then
-            bmp.DrawCircle(tmp.Nodes[closestMe[i]], 4, $FF00FF);
-          if i < Length(closestDest) then
-            bmp.DrawCircle(tmp.Nodes[closestDest[i]], 4, $FF0000);
-        end;
-
-        if bmp.Bounds().Contains(me) then
-          bmp.DrawBorderedCross(me, 4, $00FF00, $0);
-
-        if bmp.Bounds().Contains(destination) then
-          bmp.DrawBorderedCross(destination, 4, $00FF00,  $0);
-
-        bmp.Debug();
-        bmp.Free();
+    for attempt := 0 to 2 do
+    begin
+      connected := True;
+      try
+        Result := Self.WebGraph^.PathBetweenEx(me, destination, pathRandomness, 4, safe);
+      except
+        connected := False;
+        msg := GetExceptionMessage();
       end;
-      RaiseException(GetExceptionMessage());
+
+      if connected then
+        Exit;
+
+      if (Pos('don''t connect', msg) = 0) or (attempt = 2) then
+      begin
+        // Only debug if flagged
+        if debug and Assigned(Self.MapImage) and (Length(Self.WebGraph^.Nodes) > 0) then
+        begin
+          bmp := Self.MapImage.Copy();
+          tmp := Self.WebGraph^;
+
+          closestMe   := Self.WebGraph^.FindNearestNodes(me, 4);
+          closestDest := Self.WebGraph^.FindNearestNodes(destination, 4);
+
+          if (@Self.GetLocal <> nil) then
+          begin
+            tmp.Nodes := Self.GetLocal(tmp.Nodes);
+            me := Self.GetLocal([me])[0];
+            destination := Self.GetLocal([destination])[0];
+          end;
+
+          tmp.Draw(bmp);
+
+          for i := 0 to 3 do
+          begin
+            if i < Length(closestMe) then
+              bmp.DrawCircle(tmp.Nodes[closestMe[i]], 4, $FF00FF);
+            if i < Length(closestDest) then
+              bmp.DrawCircle(tmp.Nodes[closestDest[i]], 4, $FF0000);
+          end;
+
+          if bmp.Bounds().Contains(me) then
+            bmp.DrawBorderedCross(me, 4, $00FF00, $0);
+
+          if bmp.Bounds().Contains(destination) then
+            bmp.DrawBorderedCross(destination, 4, $00FF00,  $0);
+
+          bmp.Debug();
+          bmp.Free();
+        end;
+        RaiseException(msg);
+      end;
+
+      if attempt = 0 then
+      begin
+        Self.DebugLn('Path don''t connect - RandomRotate, wait 1s, retry');
+        Antiban.RandomRotate();
+        Wait(1000);
+      end
+      else
+      begin
+        Self.DebugLn('Path don''t connect - wait 2s, retry');
+        Wait(2000);
+      end;
+
+      me := Self.Position();
     end;
   end;
 

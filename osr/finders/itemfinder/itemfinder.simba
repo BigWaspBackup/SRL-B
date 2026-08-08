@@ -316,6 +316,102 @@ begin
   Result := Self.Database.GetAll(hash, 'hash', 'item');
 end;
 
+// Animated fire-cape matcher - paints non-border pixels red so flame frames
+// compare equal. ONLY for DiscoverByFilters / Load-from-client. Do NOT register
+// this as a FindItem filter: it false-matches other inventory sprites (e.g. defenders).
+procedure TRSItemFinderCustomFilter.FireCapeAnimated(constref image, templ: TMufasaBitmap); static;
+var
+  i: Int32;
+  imgPixel, tmplPixel: TColor;
+  imagePtr, templPtr: PRGB32;
+begin
+  imagePtr := image.GetData();
+  templPtr := templ.GetData();
+
+  for i := 0 to (Image.GetWidth() * Image.GetHeight())-1 do
+  begin
+    imgPixel := RGBtoColor(imagePtr^.R, imagePtr^.G, imagePtr^.B);
+    tmplPixel := RGBtoColor(templPtr^.R, templPtr^.G, templPtr^.B);
+
+    if not (imgPixel in [0, $10435D, RS_ITEM_BORDER]) and
+       not (tmplPixel in [0, $10435D, RS_ITEM_BORDER]) then
+    begin
+      imagePtr^ := [0, 0, 255, 0];
+      templPtr^ := [0, 0, 255, 0];
+    end;
+
+    Inc(imagePtr);
+    Inc(templPtr);
+  end;
+end;
+
+// No-op FindItem filter. The animated paint filter must not run during
+// inventory ContainsItem/FindItem or fire cape matches dragon defender etc.
+procedure TRSItemFinderCustomFilter.FireCape({$H-}constref image, templ: TMufasaBitmap{$H-}); static;
+begin
+end;
+
+function TRSItemFinder.MatchBitmapWithFilter(constref clientBmp: TMufasaBitmap;
+  itemName: String; matchFilter: TRSItemFinderCustomFilter): Boolean;
+var
+  j: Int32;
+  images: TMufasaBitmapArray;
+  imageCopy, clientCopy: TMufasaBitmap;
+  filterPtr: TRSItemFinderCustomFilter;
+begin
+  Result := False;
+  if Length(Self.GetItemIDs(itemName)) = 0 then
+    Exit;
+
+  filterPtr := @matchFilter;
+  images := Self.GetItemImages(itemName);
+  for j := 0 to High(images) do
+  begin
+    imageCopy := images[j].Copy();
+    clientCopy := clientBmp.Copy();
+    try
+      if Self.CompareItems(imageCopy, clientCopy, @filterPtr) >= Self.Similarity then
+        Exit(True);
+    finally
+      imageCopy.Free();
+      clientCopy.Free();
+    end;
+  end;
+end;
+
+function TRSItemFinder.DiscoverByFilters(constref clientBmp: TMufasaBitmap): TRSItemArray;
+var
+  i: Int32;
+  itemName: String;
+  capeNames: TStringArray;
+begin
+  SetLength(Result, 0);
+
+  for i := 0 to High(Self.ItemFilters) do
+  begin
+    itemName := LowerCase(Self.ItemFilters[i].Name);
+    if Result.Find(itemName) >= 0 then
+      Continue;
+    // Fire cape uses FireCapeAnimated below - skip the no-op FindItem filter.
+    if itemName.Contains('fire cape') then
+      Continue;
+
+    if Self.MatchBitmapWithFilter(clientBmp, itemName, @Self.ItemFilters[i].Filter) then
+      Result += itemName;
+  end;
+
+  // Animated cape: hash miss + FireCapeAnimated (not registered for FindItem).
+  capeNames := ['fire cape', 'fire cape (l)'];
+  for i := 0 to High(capeNames) do
+  begin
+    itemName := capeNames[i];
+    if Result.Find(itemName) >= 0 then
+      Continue;
+    if Self.MatchBitmapWithFilter(clientBmp, itemName, @TRSItemFinderCustomFilter.FireCapeAnimated) then
+      Result += itemName;
+  end;
+end;
+
 
 
 function TRSItemFinder.GetItemImages(item: String): array of TMufasaBitmap;
@@ -536,34 +632,6 @@ begin
   end;
 end;
 
-procedure TRSItemFinderCustomFilter.FireCape(constref image, templ: TMufasaBitmap); static;
-var
-  i: Int32;
-  imgPixel, tmplPixel: TColor;
-  imagePtr, templPtr: PRGB32;
-begin
-  imagePtr := image.GetData();
-  templPtr := templ.GetData();
-
-  for i := 0 to (Image.GetWidth() * Image.GetHeight())-1 do
-  begin
-    imgPixel := RGBtoColor(imagePtr^.R, imagePtr^.G, imagePtr^.B);
-    tmplPixel := RGBtoColor(templPtr^.R, templPtr^.G, templPtr^.B);
-
-    if not (imgPixel in [0, $10435D, RS_ITEM_BORDER]) and
-       not (tmplPixel in [0, $10435D, RS_ITEM_BORDER]) then
-    begin
-      //set any pixel that is not 0, $10435D or ITEMBORDER to red.
-      //basically paint both images red on everything that is not the border and "neck" rope
-      imagePtr^ := [0, 0, 255, 0];
-      templPtr^ := [0, 0, 255, 0];
-    end;
-
-    Inc(imagePtr);
-    Inc(templPtr);
-  end;
-end;
-
 procedure TRSItemFinderCustomFilter.LavaScales(constref image, templ: TMufasaBitmap); static;
 var
   I: Int32;
@@ -641,6 +709,8 @@ begin
   ItemFinder.AddItemFilter('Magic shortbow (i)', @TRSItemFinderCustomFilter.ClearSparkles);
   ItemFinder.AddItemFilter('noted Magic logs', @TRSItemFinderCustomFilter.ClearSparkles);
   ItemFinder.AddItemFilter('Fire cape', @TRSItemFinderCustomFilter.FireCape);
+  ItemFinder.AddItemFilter('fire cape', @TRSItemFinderCustomFilter.FireCape);
+  ItemFinder.AddItemFilter('fire cape (l)', @TRSItemFinderCustomFilter.FireCape);
   ItemFinder.AddItemFilter('Lava scale', @TRSItemFinderCustomFilter.LavaScales);
   ItemFinder.AddItemFilter('Lava scale shard', @TRSItemFinderCustomFilter.LavaScales);
   ItemFinder.AddItemFilter('Dark essence block', @TRSItemFinderCustomFilter.DarkEss);

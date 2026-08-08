@@ -268,6 +268,7 @@ function TRSItemInterface.DiscoverAllEx(): array of TRSItemArray;
 var
   b: TBox;
   bmp: TMufasaBitmap;
+  found: TRSItemArray;
 begin
   if (@Self.SlotBoxesFunction = nil) then
     Self.Fatal('ItemInterface.SlotBoxesFunction = nil');
@@ -283,8 +284,14 @@ begin
       Self.Fatal('Discover methods box has to be 36x23. You passed w: ' + ToStr(b.Width()) + ' h: ' + ToStr(b.Height()));
 
     bmp.FromClient(b);
+    found := [];
     if ItemFinder.CleanItemBitmap(bmp) then
-      Result += ItemFinder.GetHashItems(ItemFinder.GetHash(bmp));
+    begin
+      found := ItemFinder.GetHashItems(ItemFinder.GetHash(bmp));
+      if Length(found) = 0 then
+        found := ItemFinder.DiscoverByFilters(bmp);
+    end;
+    Result += found;
     bmp.Free();
   end;
 end;
@@ -293,6 +300,7 @@ function TRSItemInterface.DiscoverAll(): TRSItemArray;
 var
   b: TBox;
   bmp: TMufasaBitmap;
+  found: TRSItemArray;
 begin
   if (@Self.SlotBoxesFunction = nil) then
     Self.Fatal('ItemInterface.SlotBoxesFunction = nil');
@@ -309,7 +317,12 @@ begin
 
     bmp.FromClient(b);
     if ItemFinder.CleanItemBitmap(bmp) then
-      Result += ItemFinder.GetHashItems(ItemFinder.GetHash(bmp));
+    begin
+      found := ItemFinder.GetHashItems(ItemFinder.GetHash(bmp));
+      if Length(found) = 0 then
+        found := ItemFinder.DiscoverByFilters(bmp);
+      Result += found;
+    end;
     bmp.Free();
   end;
 end;
@@ -330,7 +343,12 @@ begin
 
   bmp.FromClient(b);
   if ItemFinder.CleanItemBitmap(bmp) then
+  begin
     Result := ItemFinder.GetHashItems(ItemFinder.GetHash(bmp));
+    // Animated items (e.g. fire cape) rarely hash-match a single DB frame.
+    if Length(Result) = 0 then
+      Result := ItemFinder.DiscoverByFilters(bmp);
+  end;
   bmp.Free();
 end;
 

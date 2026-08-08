@@ -1,3 +1,12 @@
+## [8.2.5](https://github.com/BigWaspBackup/SRL-B/compare/v8.2.4...v8.2.5) (2026-08-08)
+
+
+### Bug Fixes
+
+* Fix for itemfinder and firecape ([fa4d97c](https://github.com/BigWaspBackup/SRL-B/commit/fa4d97c2dd5b13f11ae90ecae791d395908a442c))
+
+
+
 ## [8.2.4](https://github.com/BigWaspBackup/SRL-B/compare/v8.2.3...v8.2.4) (2026-08-08)
 
 
@@ -31,10 +40,6 @@
 ### Bug Fixes
 
 * Update bank.simba to correct item tab handling and improve item withdrawal ([5caa92c](https://github.com/BigWaspBackup/SRL-B/commit/5caa92c1790fe9f88e5ea7d528976ef639250659))
-
-
-
-# [8.2.0](https://github.com/BigWaspBackup/SRL-B/compare/v8.1.0...v8.2.0) (2026-07-29)
 
 
 

@@ -1,3 +1,12 @@
+## [8.2.4](https://github.com/BigWaspBackup/SRL-B/compare/v8.2.3...v8.2.4) (2026-08-08)
+
+
+### Bug Fixes
+
+* Walker retries instead of always crashing when webwalking. ([80be51a](https://github.com/BigWaspBackup/SRL-B/commit/80be51a8ffdfa36720817c53ae7433ce27b948f3))
+
+
+
 ## [8.2.3](https://github.com/BigWaspBackup/SRL-B/compare/v8.2.2...v8.2.3) (2026-08-07)
 
 
@@ -26,10 +35,6 @@
 
 
 # [8.2.0](https://github.com/BigWaspBackup/SRL-B/compare/v8.1.0...v8.2.0) (2026-07-29)
-
-
-
-# [8.1.0](https://github.com/BigWaspBackup/SRL-B/compare/v8.0.1...v8.1.0) (2026-07-24)
 
 
 

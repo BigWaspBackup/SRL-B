@@ -409,39 +409,72 @@ end;
 
 function TWebGraphV2.FindObjectPath(me: TPoint; out p: TPoint): TPointArray;
 var
-  i: Int32;
+  i, attempt: Int32;
   cluster, best: TPointArray;
+  original: TPoint;
+  pathFailed: Boolean;
 begin
-  if Self.UseCollisionData then
+  original := p;
+
+  for attempt := 0 to 2 do
   begin
-    for i := 0 to High(Self.WalkableClusters) do
-      if Self.WalkableClusters[i].Contains(me) then
-        cluster := Self.WalkableClusters[i];
+    pathFailed := False;
+    Result := [];
+    cluster := [];
 
-    if cluster = [] then
-      RaiseException(SRL.TimeStamp() + ':[WebGraph]:[Fatal]: Can''t find player cluster containg: ' + me.ToString());
-  end;
-
-  best := Self.FindNearestNodesEx(p, 12);
-  for i := 0 to High(best) do
-  begin
-    p := best[i];
-
-    if not Self.UseCollisionData or cluster.Contains(p) then
+    if Self.UseCollisionData then
     begin
-      try
-        Result := Self.PathBetweenEx(me, p, 0.2, 2);
-        if Result = [] then
-        begin
-          if me.InRange(p, 52) then Exit([p]);
-          RaiseException('Path empty');
-        end;
-      except
-        if me.InRange(p, 52) then Exit([p]);
-        RaiseException(SRL.TimeStamp() + ':[WebGraph]:[Fatal]: Can''t find a walkable path to ' + p.ToString() + ' object.');
-      end;
-      Break;
+      for i := 0 to High(Self.WalkableClusters) do
+        if Self.WalkableClusters[i].Contains(me) then
+          cluster := Self.WalkableClusters[i];
+
+      if cluster = [] then
+        RaiseException(SRL.TimeStamp() + ':[WebGraph]:[Fatal]: Can''t find player cluster containg: ' + me.ToString());
     end;
+
+    best := Self.FindNearestNodesEx(original, 12);
+    for i := 0 to High(best) do
+    begin
+      p := best[i];
+
+      if not Self.UseCollisionData or cluster.Contains(p) then
+      begin
+        try
+          Result := Self.PathBetweenEx(me, p, 0.2, 2);
+          if Result = [] then
+          begin
+            if me.InRange(p, 52) then Exit([p]);
+            RaiseException('Path empty');
+          end;
+          Exit;
+        except
+          if me.InRange(p, 52) then Exit([p]);
+          pathFailed := True;
+          Break;
+        end;
+      end;
+    end;
+
+    // No matching walkable node was attempted
+    if not pathFailed then
+      Exit;
+
+    if attempt = 2 then
+      RaiseException(SRL.TimeStamp() + ':[WebGraph]:[Fatal]: Can''t find a walkable path to ' + p.ToString() + ' object.');
+
+    if attempt = 0 then
+    begin
+      WriteLn(SRL.TimeStamp() + ':[WebGraph]: Path to object failed - RandomRotate, wait 1s, retry');
+      Antiban.RandomRotate();
+      Wait(1000);
+    end
+    else
+    begin
+      WriteLn(SRL.TimeStamp() + ':[WebGraph]: Path to object failed - wait 2s, retry');
+      Wait(2000);
+    end;
+
+    me := Map.Position();
   end;
 end;
 

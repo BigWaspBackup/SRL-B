@@ -1,3 +1,13 @@
+## [8.2.6](https://github.com/BigWaspBackup/SRL-B/compare/v8.2.5...v8.2.6) (2026-08-11)
+
+
+### Bug Fixes
+
+* bump ([b4955f6](https://github.com/BigWaspBackup/SRL-B/commit/b4955f68d6d6da64192d425932541eafe531486f))
+* Fix exception crash when walking to an object to early ([6440f9b](https://github.com/BigWaspBackup/SRL-B/commit/6440f9b5d760343363f82d15912772e0dde69392))
+
+
+
 ## [8.2.5](https://github.com/BigWaspBackup/SRL-B/compare/v8.2.4...v8.2.5) (2026-08-08)
 
 
@@ -31,15 +41,6 @@
 ### Bug Fixes
 
 * fixed item finder for discovering worn equipment ([bf6395f](https://github.com/BigWaspBackup/SRL-B/commit/bf6395fd2caa434deba53ff8c9fd29fe6266f261))
-
-
-
-## [8.2.1](https://github.com/BigWaspBackup/SRL-B/compare/v8.2.0...v8.2.1) (2026-08-01)
-
-
-### Bug Fixes
-
-* Update bank.simba to correct item tab handling and improve item withdrawal ([5caa92c](https://github.com/BigWaspBackup/SRL-B/commit/5caa92c1790fe9f88e5ea7d528976ef639250659))
 
 
 

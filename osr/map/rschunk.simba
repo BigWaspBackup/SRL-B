@@ -31,7 +31,8 @@ type
     TEMPOROSS_COVE,
     VARROCK,
     WINTERTODT,
-    DEEPFIN_POINT
+    DEEPFIN_POINT,
+    WYRMSCRAIG
   );
 
 function ERSChunk.Get(planes: TIntegerArray = []): TRSMapChunk; constref;
@@ -64,6 +65,7 @@ begin
     ERSChunk.VARROCK                : Result := Chunk(Box(49,54,50,53), 0);
     ERSChunk.WINTERTODT             : Result := Chunk(Box(24,63,26,61), 0);
     ERSChunk.DEEPFIN_POINT          : Result := Chunk(Box(29,44,31,42), 0);
+    ERSChunk.WYRMSCRAIG             : Result := Chunk(Box(37,37,40,33), 0);
   end;
 
   if planes <> [] then Result.Planes := planes;
@@ -120,7 +122,8 @@ EBankChunk is a enumerator that contains all bank chunks supported by BashLib.
     THE_SUMMER_SHORE,
     WARRIORS_GUILD,
     YANILLE,
-    ZANARIS
+    ZANARIS,
+    WYRMSCRAIG
   );
 
 function EBankChunk.Name(): String; constref;
@@ -170,5 +173,6 @@ begin
     EBankChunk.WARRIORS_GUILD:    Result := Chunk(Box(43,56,45,54), 0);
     EBankChunk.YANILLE:           Result := Chunk(Box(40,49,42,47), 0);
     EBankChunk.ZANARIS:           Result := Chunk(Box(36,70,39,67), 0);
+    EBankChunk.WYRMSCRAIG:        Result := ERSChunk.WYRMSCRAIG.Get();
   end;
 end;

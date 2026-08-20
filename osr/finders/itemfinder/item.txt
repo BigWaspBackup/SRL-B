@@ -10653,6 +10653,7 @@ noted box trap pack
 magic imp box pack
 noted magic imp box pack
 archaic emblem (tier 1)
+noted archaic emblem (tier 1)
 archaic emblem (tier 2)
 archaic emblem (tier 3)
 archaic emblem (tier 4)
@@ -19851,8 +19852,6 @@ noted hallowfell
 jar of light
 sunstone crystal
 ardeaglais teleport
-placeholder
-noted placeholder
 mr mcgroot
 aggy
 large hat
@@ -19867,6 +19866,12 @@ staircase key
 dull sunstone core
 final letter
 wyrmscraig
+fairy tale quest lamp
+noted archaic emblem (tier 5)
+vampyre snail shell
+vampyre snelm
+shark lure pack
+noted shark lure pack
 marrentill seed
 marrentill seed
 marrentill seed

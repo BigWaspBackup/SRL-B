@@ -273,10 +273,13 @@ begin
   begin
     if (not Self.AllowDangerousWorlds) then
     begin
-      // normal free(silver) or members(gold) world
+      // Retry instead of term on danger
       if (SRL.CountColor(CTS1(4089471, 20), B) = 0) and
          (SRL.CountColor(CTS1(8421504, 25), B) = 0) then
-        Self.Fatal('Not allowed to login to dangerous worlds (' + ToString(World) + ')');
+      begin
+        Self.DebugLn('Skipping world ' + ToString(World) + ' - no members/F2P star color in the world-number box (dangerous world or false OCR match)');
+        Exit(False);
+      end;
     end;
 
     Mouse.Click(B, MOUSE_LEFT);

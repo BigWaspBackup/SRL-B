@@ -1,3 +1,12 @@
+## [8.3.1](https://github.com/BigWaspBackup/SRL-B/compare/v8.3.0...v8.3.1) (2026-08-22)
+
+
+### Bug Fixes
+
+* Improvement to world select to pick another world instead of terminate in some scenarios ([a5cc4bb](https://github.com/BigWaspBackup/SRL-B/commit/a5cc4bb5f562f4912e3ce025cfdbf6177e293990))
+
+
+
 # [8.3.0](https://github.com/BigWaspBackup/SRL-B/compare/v8.2.6...v8.3.0) (2026-08-18)
 
 
@@ -32,15 +41,6 @@
 ### Bug Fixes
 
 * Walker retries instead of always crashing when webwalking. ([80be51a](https://github.com/BigWaspBackup/SRL-B/commit/80be51a8ffdfa36720817c53ae7433ce27b948f3))
-
-
-
-## [8.2.3](https://github.com/BigWaspBackup/SRL-B/compare/v8.2.2...v8.2.3) (2026-08-07)
-
-
-### Bug Fixes
-
-* Stop debug window appearing on failed webwalk unless flagged. ([da16b93](https://github.com/BigWaspBackup/SRL-B/commit/da16b933c3a5d44ecd09396c15517f1a1e67c9cc))
 
 
 

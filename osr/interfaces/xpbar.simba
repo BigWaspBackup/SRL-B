@@ -68,7 +68,7 @@ begin
     Left := InterfaceArea.Bounds.X2 - 141;
     Right := InterfaceArea.Bounds.X2 - 2;
     Top := InterfaceArea.Bounds.Y1;
-    Bottom := InterfaceArea.Bounds.Y1 + 28;
+    Bottom := InterfaceArea.Bounds.Y1 + 51;
     MaxWidth := 0;
     MaxHeight := 0;
   end;
@@ -118,6 +118,21 @@ begin
   Result := WaitUntil(Self.IsEnabled(), SRL.TruncatedGauss(100, 1000), 3000);
 end;
 
+function TRSXPBar.OCRLooksLikeTotalXP(xpStr: String): Boolean;
+var
+  i: Int32;
+begin
+  Result := False;
+  if xpStr = '' then
+    Exit;
+
+  for i := 1 to Length(xpStr) do
+    if xpStr[i].IsAlpha() then
+      Exit;
+
+  Result := xpStr.ExtractInteger(0) > 0;
+end;
+
 (*
 ## XPBar._Setup
 ```pascal
@@ -128,36 +143,53 @@ Internal method automatically called by SRL once when attempting to read the XPB
 procedure TRSXPBar._Setup();
 var
   tpa: TPointArray;
+  whiteH, i, idx: Int32;
+  order: array of Int32;
+  xpStr: String;
+  tryFont: TFontSet;
 begin
-  if not Self.Enable() then Exit;
+  if not Self.Enable() then
+    Exit;
 
-  for Self.Alignment in Self.Alignments do
+  // Right-side first for plugin support #SorryNotSorry
+  if Length(Self.Alignments) >= 3 then
+    order := [2, 1, 0]
+  else
   begin
-    Self.SetupAlignment(Self.Alignment);
-    if SRL.FindColors(tpa, $FFFFFF, Self.Bounds) > 0 then
-      Break;
+    SetLength(order, Length(Self.Alignments));
+    for i := 0 to High(Self.Alignments) do
+      order[i] := i;
   end;
 
-  if tpa = [] then
+  for i := 0 to High(order) do
   begin
-    Self.Alignment := [];
-    Self.Font := [];
+    idx := order[i];
+    Self.Alignment := Self.Alignments[idx];
+    Self.SetupAlignment(Self.Alignment);
+
+    if SRL.FindColors(tpa, $FFFFFF, Self.Bounds) = 0 then
+      Continue;
+
+    whiteH := tpa.Bounds().Height();
+    case whiteH of
+      8:  tryFont := RS_FONT_PLAIN_11;
+      11: tryFont := RS_FONT_PLAIN_12;
+      10: tryFont := RS_FONT_BOLD_12;
+      else
+        Continue;
+    end;
+
+    xpStr := OCR.Recognize(Self.Bounds, TOCRColorFilter.Create([$FFFFFF]), tryFont);
+    if not Self.OCRLooksLikeTotalXP(xpStr) then
+      Continue;
+
+    Self.Font := tryFont;
+    Self.IsSetup := True;
     Exit;
   end;
 
-  case tpa.Bounds().Height() of
-    8:  Self.Font := RS_FONT_PLAIN_11;
-    11: Self.Font := RS_FONT_PLAIN_12;
-    10: Self.Font := RS_FONT_BOLD_12; //it's actually less tall lol.
-    else
-    begin
-      Self.Alignment := [];
-      Self.Font := [];
-      Exit;
-    end;
-  end;
-
-  Self.IsSetup := True;
+  Self.Alignment := [];
+  Self.Font := [];
 end;
 
 (*

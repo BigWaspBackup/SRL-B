@@ -1,3 +1,12 @@
+## [8.3.2](https://github.com/BigWaspBackup/SRL-B/compare/v8.3.1...v8.3.2) (2026-08-24)
+
+
+### Bug Fixes
+
+* XPBar Tweaks; Updated objects and NPC's to latest game assets ([fd6f66e](https://github.com/BigWaspBackup/SRL-B/commit/fd6f66e0da374358c7a9bb32d4b45b60740dcc8b))
+
+
+
 ## [8.3.1](https://github.com/BigWaspBackup/SRL-B/compare/v8.3.0...v8.3.1) (2026-08-22)
 
 
@@ -32,15 +41,6 @@
 ### Bug Fixes
 
 * Fix for itemfinder and firecape ([fa4d97c](https://github.com/BigWaspBackup/SRL-B/commit/fa4d97c2dd5b13f11ae90ecae791d395908a442c))
-
-
-
-## [8.2.4](https://github.com/BigWaspBackup/SRL-B/compare/v8.2.3...v8.2.4) (2026-08-08)
-
-
-### Bug Fixes
-
-* Walker retries instead of always crashing when webwalking. ([80be51a](https://github.com/BigWaspBackup/SRL-B/commit/80be51a8ffdfa36720817c53ae7433ce27b948f3))
 
 
 

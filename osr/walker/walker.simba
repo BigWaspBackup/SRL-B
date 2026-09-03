@@ -952,8 +952,8 @@ begin
         Self.ScreenWalk := False
       else if (Fails = 5) then
         case SRL.Dice(50) of
-            True:  Minimap.SetCompassAngle(Minimap.GetCompassAngle() - SRL.TruncatedGauss(30, 360, 3));
-            False: Minimap.SetCompassAngle(Minimap.GetCompassAngle() + SRL.TruncatedGauss(30, 360, 3));
+            True:  Minimap.SetCompassAngle(Minimap.GetCompassAngle() - SRL.TruncatedGauss(20, 70, 3));
+            False: Minimap.SetCompassAngle(Minimap.GetCompassAngle() + SRL.TruncatedGauss(20, 70, 3));
           end;
 
       if (Fails mod 2 = 0) then

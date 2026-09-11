@@ -20064,6 +20064,104 @@ amulet of fire
 noted amulet of fire
 elemental amulet
 noted elemental amulet
+labrador
+labrador
+labrador
+chihuahua
+chihuahua
+chihuahua
+border collie
+border collie
+border collie
+corgi
+corgi
+corgi
+greyhound
+greyhound
+greyhound
+husky
+husky
+husky
+pug
+pug
+pug
+samoyed
+samoyed
+samoyed
+bernese mountain dog
+bernese mountain dog
+bernese mountain dog
+shiba
+shiba
+shiba
+spaniel
+spaniel
+spaniel
+yorkie
+yorkie
+yorkie
+labrador puppy
+labrador puppy
+labrador puppy
+husky puppy
+husky puppy
+husky puppy
+chihuahua puppy
+chihuahua puppy
+chihuahua puppy
+border collie puppy
+border collie puppy
+border collie puppy
+corgi puppy
+corgi puppy
+corgi puppy
+greyhound puppy
+greyhound puppy
+greyhound puppy
+pug puppy
+pug puppy
+pug puppy
+samoyed puppy
+samoyed puppy
+samoyed puppy
+bernese mountain dog puppy
+bernese mountain dog puppy
+bernese mountain dog puppy
+shiba puppy
+shiba puppy
+shiba puppy
+spaniel puppy
+spaniel puppy
+spaniel puppy
+yorkie puppy
+yorkie puppy
+yorkie puppy
+shell
+shell
+shell
+shell
+shell
+shell
+shell
+shell
+shell
+weathered rosewood plank
+battered barrel
+sea-soaked bowstring
+instrument
+shell collection
+shell c
+shell d
+shell e
+shell f
+shell g
+shell a
+shell a#
+stray puppy
+stray puppy
+stray puppy
+stray dog
+stuffed dog
 marrentill seed
 marrentill seed
 marrentill seed

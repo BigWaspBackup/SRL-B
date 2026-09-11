@@ -1,3 +1,12 @@
+## [8.3.5](https://github.com/BigWaspBackup/SRL-B/compare/v8.3.4...v8.3.5) (2026-09-11)
+
+
+### Bug Fixes
+
+* Update to latest game assets ([155a26f](https://github.com/BigWaspBackup/SRL-B/commit/155a26f3a79bca256ec7563db6254aa474353cb3))
+
+
+
 ## [8.3.4](https://github.com/BigWaspBackup/SRL-B/compare/v8.3.3...v8.3.4) (2026-09-03)
 
 
@@ -31,15 +40,6 @@
 ### Bug Fixes
 
 * Improvement to world select to pick another world instead of terminate in some scenarios ([a5cc4bb](https://github.com/BigWaspBackup/SRL-B/commit/a5cc4bb5f562f4912e3ce025cfdbf6177e293990))
-
-
-
-# [8.3.0](https://github.com/BigWaspBackup/SRL-B/compare/v8.2.6...v8.3.0) (2026-08-18)
-
-
-### Features
-
-* Add Wyrmscraig to ERSChunk and EBankChunk ([0b8c379](https://github.com/BigWaspBackup/SRL-B/commit/0b8c379b967abf91d74c1abf7958786f25c25a76))
 
 
 

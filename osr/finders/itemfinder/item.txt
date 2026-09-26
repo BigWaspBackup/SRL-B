@@ -9839,7 +9839,7 @@ noted zamorak mix(2)
 zamorak mix(1)
 noted zamorak mix(1)
 feather
-mausoleum bridge repair
+mausoleum bridge reinforcement
 water pump
 cooking pot
 pottery wheel
@@ -20162,6 +20162,7 @@ stray puppy
 stray puppy
 stray dog
 stuffed dog
+noted daeyalt essence
 marrentill seed
 marrentill seed
 marrentill seed

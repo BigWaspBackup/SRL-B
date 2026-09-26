@@ -267,23 +267,30 @@ function TRSLogin.ClickWorld(World: Int32): Boolean;
 var
   B: TBox;
 begin
+  Self.DebugLn('Looking for world ' + ToString(World) + ' on the login world list');
   Result := OCR.LocateText(Self.Bounds, ToString(World), RS_FONT_BOLD_12, TOCRColorFilter.Create([$000000]), B) = 1;
 
-  if Result then
+  if not Result then
   begin
-    if (not Self.AllowDangerousWorlds) then
-    begin
-      // Retry instead of term on danger
-      if (SRL.CountColor(CTS1(4089471, 20), B) = 0) and
-         (SRL.CountColor(CTS1(8421504, 25), B) = 0) then
-      begin
-        Self.DebugLn('Skipping world ' + ToString(World) + ' - no members/F2P star color in the world-number box (dangerous world or false OCR match)');
-        Exit(False);
-      end;
-    end;
-
-    Mouse.Click(B, MOUSE_LEFT);
+    Self.DebugLn('World ' + ToString(World) + ' was not found on this page');
+    Exit;
   end;
+
+  Self.DebugLn('World ' + ToString(World) + ' OCR box ' + ToStr(B));
+
+  if (not Self.AllowDangerousWorlds) then
+  begin
+    // Retry instead of term on danger
+    if (SRL.CountColor(CTS1(4089471, 20), B) = 0) and
+       (SRL.CountColor(CTS1(8421504, 25), B) = 0) then
+    begin
+      Self.DebugLn('Skipping world ' + ToString(World) + ' - no members/F2P star color in the world-number box (dangerous world or false OCR match)');
+      Exit(False);
+    end;
+  end;
+
+  Self.DebugLn('Clicking world ' + ToString(World) + ' at ' + ToStr(B));
+  Mouse.Click(B, MOUSE_LEFT);
 end;
 
 (*
@@ -394,9 +401,11 @@ WriteLn Login.SwitchToWorld(303);
 *)
 function TRSLogin.SwitchToWorld(World: Int32): Boolean;
 var
-  i: Int32;
+  i, current: Int32;
 begin
-  if Self.GetCurrentWorld() = World then
+  current := Self.GetCurrentWorld();
+  Self.DebugLn('SwitchToWorld target=' + ToString(World) + ' current=' + ToString(current));
+  if current = World then
     Exit(True);
 
   if Self.OpenWorldSwitcher() then
@@ -405,7 +414,10 @@ begin
     begin
       if Self.ClickWorld(World) then
       begin
-        Result := Self.GetCurrentWorld() = World;
+        current := Self.GetCurrentWorld();
+        Result := current = World;
+        if not Result then
+          Self.CloseWorldSwitcher();
         Exit;
       end;
 
@@ -413,7 +425,82 @@ begin
 
       Wait(500, 2000, wdLeft);
     end;
+    Self.CloseWorldSwitcher();
   end;
+end;
+
+function TRSLogin.PickWorldFromList(worlds: TIntegerArray; current: Int32): Int32;
+var
+  i: Int32;
+  others: TIntegerArray;
+begin
+  Result := 0;
+  if Length(worlds) = 0 then
+    Exit;
+
+  for i := 0 to High(worlds) do
+    if worlds[i] <> current then
+      others += worlds[i];
+
+  if Length(others) > 0 then
+    Exit(others[Random(Length(others))]);
+
+  Result := worlds[Random(Length(worlds))];
+end;
+
+function TRSLogin.PrepareLoginWorld(worlds: TIntegerArray; randomHop: Boolean; hopChance: Int32): Boolean;
+var
+  current, target, i: Int32;
+  tried: TIntegerArray;
+  shouldHop: Boolean;
+begin
+  Result := True;
+  if worlds = [] then
+  begin
+    Self.DebugLn('No worlds configured, leaving the current login world');
+    Exit;
+  end;
+
+  current := Self.GetCurrentWorld();
+  Self.DebugLn('Login world is ' + ToString(current) + '. Configured worlds: ' + ToStr(worlds) + '. randomHop=' + ToStr(randomHop) + ' hopChance=' + ToString(hopChance));
+  shouldHop := not (current in worlds);
+  if shouldHop then
+    Self.DebugLn('Hopping because world ' + ToString(current) + ' is not in the configured list')
+  else if randomHop and SRL.Dice(hopChance) then
+  begin
+    shouldHop := True;
+    Self.DebugLn('Random login hop rolled (' + ToString(hopChance) + '%). This is separate from the world hop checkbox');
+  end
+  else
+    Self.DebugLn('Staying on world ' + ToString(current));
+
+  if shouldHop then
+  begin
+    Result := False;
+    for i := 1 to Min(5, Length(worlds)) do
+    begin
+      target := Self.PickWorldFromList(worlds, current);
+      if tried.Contains(target) then
+        Continue;
+      tried += target;
+
+      Self.DebugLn('Login hop target ' + ToString(target) + ' (picked from configured worlds, not from the world shown on screen)');
+      if Self.SwitchToWorld(target) then
+      begin
+        current := Self.GetCurrentWorld();
+        if current in worlds then
+          Exit(True);
+      end
+      else
+      begin
+        Self.CloseWorldSwitcher();
+        current := Self.GetCurrentWorld();
+      end;
+    end;
+  end;
+
+  current := Self.GetCurrentWorld();
+  Result := current in worlds;
 end;
 
 (*
@@ -608,12 +695,15 @@ begin
   current  := GetTickCount();
   timeout  := current + 15000;
   failsafe := current + Random(5000, 7000);
-  Self.DebugLn('Handling lobby screen.');
+  Self.DebugLn('Handling lobby screen. Login open=' + ToStr(Self.IsOpen()) + ' world switcher=' + ToStr(Self.IsWorldSwitcherOpen()));
 
   while not RSClient.IsLoggedIn() do
   begin
     if Self.ClickText('CLICK HERE TO PLAY') then
+    begin
+      Self.DebugLn('Clicked CLICK HERE TO PLAY');
       if RSClient.IsLoggedIn(5000) then exit(True);
+    end;
 
     current := GetTickCount();
     if (current > timeout) then
@@ -747,7 +837,7 @@ WriteLn Login.LoginPlayer();
 *)
 function TRSLogin.LoginPlayer(): Boolean; 
 var
-  attempts, world: Int32;
+  attempts: Int32;
   timeout: UInt64;
   player: TRSLoginPlayer;
   isLauncher: Boolean;
@@ -761,7 +851,12 @@ begin
     if Self.FindText('CLICK HERE TO PLAY') then
       Exit(Self.EnterGame());
 
-    if Self.HandleDialogs() then
+    if Self.IsWorldSwitcherOpen() then
+    begin
+      Self.DebugLn('World switcher is open while waiting for the login screen. Closing it');
+      Self.CloseWorldSwitcher();
+    end
+    else if Self.HandleDialogs() then
       Wait(500);
 
     if GetTickCount() > timeout then
@@ -783,17 +878,18 @@ begin
       Self.Fatal('Player has no username or password');
   end;
 
+  if not Self.IsOpen() then
+    Self.DebugLn('Login screen is not open (Click to switch was not found). Skipping world select and the play click');
+
   while Self.IsOpen() and (attempts < 10) do
   begin
     Self.DebugLn('Attempt ' + ToString(attempts + 1));
 
-    if player.Worlds <> [] then
-      if not (Self.GetCurrentWorld() in player.Worlds) or SRL.Dice(30) then
-      begin
-        world := Player.Worlds[Random(Length(Player.Worlds))];
-        if (not Self.SwitchToWorld(world)) then
-          Exit;
-      end;
+    if not Self.PrepareLoginWorld(player.Worlds, True, 30) then
+    begin
+      Inc(attempts);
+      Continue;
+    end;
 
     if Self.HandleDialogs() then
       Wait(500);
@@ -825,7 +921,7 @@ WriteLn Login.LoginPlayer(True, 90); // When on the main login lobby, has a 90% 
 
 function TRSLogin.LoginPlayer(randomHop: Boolean; hopChance: Int32 = 30): Boolean; overload;
 var
-  attempts, world: Int32;
+  attempts: Int32;
   timeout: UInt64;
   player: TRSLoginPlayer;
   isLauncher: Boolean;
@@ -839,7 +935,12 @@ begin
     if Self.FindText('CLICK HERE TO PLAY') then
       Exit(Self.EnterGame());
 
-    if Self.HandleDialogs() then
+    if Self.IsWorldSwitcherOpen() then
+    begin
+      Self.DebugLn('World switcher is open while waiting for the login screen. Closing it');
+      Self.CloseWorldSwitcher();
+    end
+    else if Self.HandleDialogs() then
       Wait(500);
 
     if GetTickCount() > timeout then
@@ -861,17 +962,18 @@ begin
       Self.Fatal('Player has no username or password');
   end;
 
+  if not Self.IsOpen() then
+    Self.DebugLn('Login screen is not open (Click to switch was not found). Skipping world select and the play click');
+
   while Self.IsOpen() and (attempts < 10) do
   begin
     Self.DebugLn('Attempt ' + ToString(attempts + 1));
 
-    if (player.Worlds <> []) and randomHop then
-      if not (Self.GetCurrentWorld() in player.Worlds) or SRL.Dice(hopChance) then
-      begin
-        world := Player.Worlds[Random(Length(Player.Worlds))];
-        if (not Self.SwitchToWorld(world)) then
-          Exit;
-      end;
+    if not Self.PrepareLoginWorld(player.Worlds, randomHop, hopChance) then
+    begin
+      Inc(attempts);
+      Continue;
+    end;
 
     if Self.HandleDialogs() then
       Wait(500);

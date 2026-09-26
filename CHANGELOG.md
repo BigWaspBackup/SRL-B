@@ -1,3 +1,12 @@
+# [8.4.0](https://github.com/BigWaspBackup/SRL-B/compare/v8.3.5...v8.4.0) (2026-09-26)
+
+
+### Features
+
+* Updated to latest game assets, updated for latest gear renames ([151f0d9](https://github.com/BigWaspBackup/SRL-B/commit/151f0d9dc2d487c18b11776a399bfcd16eed81a7))
+
+
+
 ## [8.3.5](https://github.com/BigWaspBackup/SRL-B/compare/v8.3.4...v8.3.5) (2026-09-11)
 
 
@@ -31,15 +40,6 @@
 ### Bug Fixes
 
 * XPBar Tweaks; Updated objects and NPC's to latest game assets ([fd6f66e](https://github.com/BigWaspBackup/SRL-B/commit/fd6f66e0da374358c7a9bb32d4b45b60740dcc8b))
-
-
-
-## [8.3.1](https://github.com/BigWaspBackup/SRL-B/compare/v8.3.0...v8.3.1) (2026-08-22)
-
-
-### Bug Fixes
-
-* Improvement to world select to pick another world instead of terminate in some scenarios ([a5cc4bb](https://github.com/BigWaspBackup/SRL-B/commit/a5cc4bb5f562f4912e3ce025cfdbf6177e293990))
 
 
 

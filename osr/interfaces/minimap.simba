@@ -236,7 +236,7 @@ const
   DEG_PER_PIXEL = 2.83;
 var
   Available: TBox;
-  Remaining, PreviousRemaining: Int32;
+  Remaining: Int32;
   LeftToRight: Boolean;
   Destination: TPoint;
   MousePosition: TPoint;
@@ -274,7 +274,6 @@ begin
         Exit;
       end;
 
-      PreviousRemaining := Remaining;
       Pixels := Round(Abs(SRL.DeltaAngle(Self.GetCompassAngle(), degrees)) * DEG_PER_PIXEL);
       LeftToRight := ((Remaining > 0) and (Abs(Remaining) <= 180)) or ((Remaining < 0) and (Abs(Remaining) > 180));
 
@@ -314,13 +313,6 @@ begin
       Wait(100, 1000, wdLeft);
 
       Remaining := Round(SRL.DeltaAngle(Self.GetCompassAngle(), degrees));
-
-      // Compass unread, or middle-mouse camera disabled: dragging forever in one direction.
-      if Abs(Remaining) >= Abs(PreviousRemaining) then
-      begin
-        Self.DebugLn('SetCompassAngle made no progress, aborting.');
-        Exit;
-      end;
     end;
   finally
     if Held then

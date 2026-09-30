@@ -1315,6 +1315,8 @@ begin
   if Self.Filter.UpText then Self.Walker^.TargetUpText := Copy(Self.UpText);
 
   me :=  Self.Walker^.Position();
+  if (me = [0, 0]) or (Length(Self.Coordinates) = 0) then
+    Exit(False);
 
   p := Self.Walker^.GetClosestPointEx(me, Self.Coordinates, path);
 
@@ -1323,7 +1325,7 @@ begin
   begin
     path := Self.Walker^.WebGraph^.FindObjectPath(me, p);
     if path = [] then
-      RaiseException(SRL.TimeStamp() + ':[MapObject]:[Fatal]: Can''t path to "' + Self.Name + '" from ' + me.ToString() + ' to ' + p.ToString());
+      Exit(False);
     same := True;
   end;
 

@@ -296,6 +296,8 @@ var
 begin
   pCircle := [p.x, p.y, 20];
   pArea := pCircle.toTPA(True).Intersection(Self.WalkableSpace);
+  if pArea = [] then
+    Exit(p);
   pAreaClusters := pArea.NRCluster(1);
 
   if Self.ObjectClusters = [] then Exit(pArea.NearestPoint(p));
@@ -422,14 +424,14 @@ begin
     Result := [];
     cluster := [];
 
+    if (me = [0, 0]) then
+      Exit;
+
     if Self.UseCollisionData then
     begin
       for i := 0 to High(Self.WalkableClusters) do
         if Self.WalkableClusters[i].Contains(me) then
           cluster := Self.WalkableClusters[i];
-
-      if cluster = [] then
-        RaiseException(SRL.TimeStamp() + ':[WebGraph]:[Fatal]: Can''t find player cluster containg: ' + me.ToString());
     end;
 
     best := Self.FindNearestNodesEx(original, 12);
@@ -437,7 +439,7 @@ begin
     begin
       p := best[i];
 
-      if not Self.UseCollisionData or cluster.Contains(p) then
+      if (not Self.UseCollisionData) or (cluster = []) or cluster.Contains(p) then
       begin
         try
           Result := Self.PathBetweenEx(me, p, 0.2, 2);

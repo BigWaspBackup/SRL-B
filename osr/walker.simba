@@ -1284,6 +1284,10 @@ function TRSWalkerV2.WebWalkEx(me: TPoint; destination: TPoint; waitUntilDistanc
 
       if (Pos('don''t connect', msg) = 0) or (attempt = 2) then
       begin
+        // A missing position or an off-graph tile should fail the walk, not kill the script.
+        if (me = [0, 0]) or (destination = [0, 0]) or (Pos('No near nodes', msg) > 0) or (Pos('player cluster', msg) > 0) then
+          Exit;
+
         // Only debug if flagged
         if debug and Assigned(Self.MapImage) and (Length(Self.WebGraph^.Nodes) > 0) then
         begin
@@ -1345,6 +1349,9 @@ var
 begin
   if not System.InRange(pathRandomness, 0, 1) then
     Self.Fatal('TRSWalkerV2.WebWalk `PathRandomness` must be within 0..1');
+
+  if (me = [0, 0]) or (destination = [0, 0]) then
+    Exit(False);
 
   if not Self._DoorHandler.Enabled then
   begin

@@ -1,3 +1,12 @@
+## [8.4.1](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.0...v8.4.1) (2026-09-30)
+
+
+### Bug Fixes
+
+* Fixed some walker crashes, minor fixes ([0f98bd1](https://github.com/BigWaspBackup/SRL-B/commit/0f98bd1ca3a6db1bc3393dcb2d44f84888b106f3))
+
+
+
 # [8.4.0](https://github.com/BigWaspBackup/SRL-B/compare/v8.3.5...v8.4.0) (2026-09-26)
 
 
@@ -31,15 +40,6 @@
 ### Bug Fixes
 
 * Updated game assets for latest OSRS update ([654089f](https://github.com/BigWaspBackup/SRL-B/commit/654089f4cb5fd055c75c83aef4fa3fcf3faf7b2a))
-
-
-
-## [8.3.2](https://github.com/BigWaspBackup/SRL-B/compare/v8.3.1...v8.3.2) (2026-08-24)
-
-
-### Bug Fixes
-
-* XPBar Tweaks; Updated objects and NPC's to latest game assets ([fd6f66e](https://github.com/BigWaspBackup/SRL-B/commit/fd6f66e0da374358c7a9bb32d4b45b60740dcc8b))
 
 
 

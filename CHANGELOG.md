@@ -1,3 +1,12 @@
+## [8.4.2](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.1...v8.4.2) (2026-10-06)
+
+
+### Bug Fixes
+
+* Added new locations for cooking ([380571b](https://github.com/BigWaspBackup/SRL-B/commit/380571b3c07a227fa52bf155c332066319a755d0))
+
+
+
 ## [8.4.1](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.0...v8.4.1) (2026-09-30)
 
 
@@ -31,15 +40,6 @@
 ### Bug Fixes
 
 * update to latest game assets ([5dae6df](https://github.com/BigWaspBackup/SRL-B/commit/5dae6df00a2ba36baeb61703cda7fe89f43f95a1))
-
-
-
-## [8.3.3](https://github.com/BigWaspBackup/SRL-B/compare/v8.3.2...v8.3.3) (2026-08-27)
-
-
-### Bug Fixes
-
-* Updated game assets for latest OSRS update ([654089f](https://github.com/BigWaspBackup/SRL-B/commit/654089f4cb5fd055c75c83aef4fa3fcf3faf7b2a))
 
 
 

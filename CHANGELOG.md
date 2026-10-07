@@ -1,3 +1,12 @@
+## [8.4.3](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.2...v8.4.3) (2026-10-07)
+
+
+### Bug Fixes
+
+* Updated to support latest OSRS update, New function for emptying containers in bank. ([f31fdfc](https://github.com/BigWaspBackup/SRL-B/commit/f31fdfcb41059d731a8ce81856dfe69c90e76478))
+
+
+
 ## [8.4.2](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.1...v8.4.2) (2026-10-06)
 
 
@@ -31,15 +40,6 @@
 ### Bug Fixes
 
 * Update to latest game assets ([155a26f](https://github.com/BigWaspBackup/SRL-B/commit/155a26f3a79bca256ec7563db6254aa474353cb3))
-
-
-
-## [8.3.4](https://github.com/BigWaspBackup/SRL-B/compare/v8.3.3...v8.3.4) (2026-09-03)
-
-
-### Bug Fixes
-
-* update to latest game assets ([5dae6df](https://github.com/BigWaspBackup/SRL-B/commit/5dae6df00a2ba36baeb61703cda7fe89f43f95a1))
 
 
 

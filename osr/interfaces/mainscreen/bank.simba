@@ -1572,6 +1572,18 @@ begin
   Result := Self.IsOpen() and Self.GetButton(ERSBankDepositButton.WORN).Click();
 end;
 
+(*
+## Bank.EmptyContainers
+```pascal
+function TRSBank.EmptyContainers: Boolean;
+```
+Empties inventory containers into the bank by clicking the empty containers button.
+*)
+function TRSBank.EmptyContainers(): Boolean;
+begin
+  Result := Self.IsOpen() and Self.GetButton(ERSBankDepositButton.CONTAINERS).Click();
+end;
+
 var
 (*
 ## var Bank

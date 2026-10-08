@@ -1,3 +1,12 @@
+## [8.4.5](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.4...v8.4.5) (2026-10-08)
+
+
+### Bug Fixes
+
+* New game assets/items support ([b9b9ea6](https://github.com/BigWaspBackup/SRL-B/commit/b9b9ea6800cee1d129a346556da9525aeea59b25))
+
+
+
 ## [8.4.4](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.3...v8.4.4) (2026-10-08)
 
 
@@ -31,15 +40,6 @@
 ### Bug Fixes
 
 * Fixed some walker crashes, minor fixes ([0f98bd1](https://github.com/BigWaspBackup/SRL-B/commit/0f98bd1ca3a6db1bc3393dcb2d44f84888b106f3))
-
-
-
-# [8.4.0](https://github.com/BigWaspBackup/SRL-B/compare/v8.3.5...v8.4.0) (2026-09-26)
-
-
-### Features
-
-* Updated to latest game assets, updated for latest gear renames ([151f0d9](https://github.com/BigWaspBackup/SRL-B/commit/151f0d9dc2d487c18b11776a399bfcd16eed81a7))
 
 
 

@@ -446,7 +446,10 @@ begin
     begin
       Self.DebugLn('Unzipping item sprite: ' + ExtractFileName(fileName) + ' this can take a few seconds');
       if not UnZipOneFile(Self.IMAGES_ZIP, ExtractFileName(fileName), Self.IMAGES_PATH) then
-        Self.Fatal('Unknown item: ' + ToString(itemID));
+      begin
+        Self.DebugLn('Missing sprite in items-imgs.zip for id ' + ToString(itemID) + ', skipping');
+        Continue;
+      end;
     end;
 
     image.Init(Client.GetMBitmaps());

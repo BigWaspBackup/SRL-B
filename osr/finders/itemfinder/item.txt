@@ -1890,6 +1890,9 @@ meat pie
 noted meat pie
 burnt pie
 noted burnt pie
+half a meat pie
+half a redberry pie
+half an apple pie
 raw oomlie
 noted raw oomlie
 wrapped oomlie
@@ -10118,6 +10121,7 @@ golovanova fruit top
 noted golovanova fruit top
 uncooked botanical pie
 noted uncooked botanical pie
+half a botanical pie
 botanical pie
 noted botanical pie
 damaged monkey tail
@@ -10942,6 +10946,7 @@ old writing
 short note
 uncooked mushroom pie
 noted uncooked mushroom pie
+half a mushroom pie
 mushroom pie
 noted mushroom pie
 bowl of fish

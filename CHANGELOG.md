@@ -1,3 +1,12 @@
+## [8.4.6](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.5...v8.4.6) (2026-10-08)
+
+
+### Bug Fixes
+
+* More new items and assets fixes ([e4f3116](https://github.com/BigWaspBackup/SRL-B/commit/e4f31160cc0f81636cdf4150573b69429787cd3c))
+
+
+
 ## [8.4.5](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.4...v8.4.5) (2026-10-08)
 
 
@@ -31,15 +40,6 @@
 ### Bug Fixes
 
 * Added new locations for cooking ([380571b](https://github.com/BigWaspBackup/SRL-B/commit/380571b3c07a227fa52bf155c332066319a755d0))
-
-
-
-## [8.4.1](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.0...v8.4.1) (2026-09-30)
-
-
-### Bug Fixes
-
-* Fixed some walker crashes, minor fixes ([0f98bd1](https://github.com/BigWaspBackup/SRL-B/commit/0f98bd1ca3a6db1bc3393dcb2d44f84888b106f3))
 
 
 

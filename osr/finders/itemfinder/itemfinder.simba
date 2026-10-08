@@ -321,13 +321,33 @@ end;
 // this as a FindItem filter: it false-matches other inventory sprites (e.g. defenders).
 procedure TRSItemFinderCustomFilter.FireCapeAnimated(constref image, templ: TMufasaBitmap); static;
 var
-  i: Int32;
+  i, imgCount, templCount: Int32;
   imgPixel, tmplPixel: TColor;
   imagePtr, templPtr: PRGB32;
 begin
   imagePtr := image.GetData();
   templPtr := templ.GetData();
 
+  for i := 0 to (Image.GetWidth() * Image.GetHeight())-1 do
+  begin
+    imgPixel := RGBtoColor(imagePtr^.R, imagePtr^.G, imagePtr^.B);
+    tmplPixel := RGBtoColor(templPtr^.R, templPtr^.G, templPtr^.B);
+    if not (imgPixel in [0, $10435D, RS_ITEM_BORDER]) then
+      Inc(imgCount);
+    if not (tmplPixel in [0, $10435D, RS_ITEM_BORDER]) then
+      Inc(templCount);
+    Inc(imagePtr);
+    Inc(templPtr);
+  end;
+
+  // Hash-miss fallback. Without a size check this paints every item red and
+  // false-matches runes, talismans, defenders, etc. as a fire cape.
+  if (imgCount = 0) or (templCount = 0) or
+     (Abs(imgCount - templCount) > (Max(imgCount, templCount) * 2 div 5)) then
+    Exit;
+
+  imagePtr := image.GetData();
+  templPtr := templ.GetData();
   for i := 0 to (Image.GetWidth() * Image.GetHeight())-1 do
   begin
     imgPixel := RGBtoColor(imagePtr^.R, imagePtr^.G, imagePtr^.B);

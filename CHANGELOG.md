@@ -1,3 +1,12 @@
+## [8.4.7](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.6...v8.4.7) (2026-10-08)
+
+
+### Bug Fixes
+
+* Improvements to itemfinder ([1fb1288](https://github.com/BigWaspBackup/SRL-B/commit/1fb1288642e91da20ba4a709890a15bd6691e3a4))
+
+
+
 ## [8.4.6](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.5...v8.4.6) (2026-10-08)
 
 
@@ -31,15 +40,6 @@
 ### Bug Fixes
 
 * Updated to support latest OSRS update, New function for emptying containers in bank. ([f31fdfc](https://github.com/BigWaspBackup/SRL-B/commit/f31fdfcb41059d731a8ce81856dfe69c90e76478))
-
-
-
-## [8.4.2](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.1...v8.4.2) (2026-10-06)
-
-
-### Bug Fixes
-
-* Added new locations for cooking ([380571b](https://github.com/BigWaspBackup/SRL-B/commit/380571b3c07a227fa52bf155c332066319a755d0))
 
 
 

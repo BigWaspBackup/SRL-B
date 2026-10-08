@@ -11497,6 +11497,7 @@ cadantine seed
 lantadyme seed
 dwarf weed seed
 torstol seed
+steam rune
 bag full of gems
 achievement diary cape
 light ballista
@@ -11987,6 +11988,7 @@ reward casket (elite)
 reward casket (hard)
 reward casket (medium)
 reward casket (easy)
+granite maul
 amulet of glory
 stale baguette
 noted stale baguette
@@ -14041,7 +14043,6 @@ noted swift blade
 ava's assembler (l)
 fire cape (l)
 infernal cape (l)
-granite maul
 granite maul
 ornate maul handle
 noted ornate maul handle
@@ -20163,6 +20164,23 @@ stray puppy
 stray dog
 stuffed dog
 noted daeyalt essence
+coins and platinum
+coins and platinum
+coins and platinum
+imbued ancient cape (deadman)
+noted fighter torso
+noted abyssal tentacle
+imbued ancient max cape
+imbued ancient max hood
+imbued ancient max cape (broken)
+net trap
+imbued ancient cape
+imbued ancient cape (broken)
+imbued ancient cape (l)
+imbued ancient cape
+ancient fabric
+supply crate
+pete's vouchers
 marrentill seed
 marrentill seed
 marrentill seed

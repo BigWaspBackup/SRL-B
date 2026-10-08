@@ -3279,7 +3279,6 @@ fremennik hat
 noted fremennik hat
 fremennik gloves
 noted fremennik gloves
-keg of beer
 noted keg of beer
 beer tankard
 noted beer tankard
@@ -9199,7 +9198,6 @@ queen help book
 no eggs
 granite body
 noted granite body
-fire cape
 minnow
 minnow
 minnow
@@ -11486,7 +11484,6 @@ graceful boots
 cabbage cape
 cabbage rune
 cruciferous codex
-magic leaves
 marrentill seed
 tarromin seed
 harralander seed
@@ -11500,15 +11497,6 @@ cadantine seed
 lantadyme seed
 dwarf weed seed
 torstol seed
-mirror shield
-lava battlestaff
-smoke battlestaff
-big fishing net
-specimen brush
-panning tray
-dramen branch
-star amulet
-spice
 bag full of gems
 achievement diary cape
 light ballista
@@ -12057,7 +12045,6 @@ ring of suffering (ri)
 giant squirrel
 tangleroot
 rocky
-rift guardian
 rift guardian
 rift guardian
 rift guardian
@@ -20176,47 +20163,6 @@ stray puppy
 stray dog
 stuffed dog
 noted daeyalt essence
-marrentill seed
-marrentill seed
-imbued ancient cape (deadman)
-marrentill seed
-tarromin seed
-tarromin seed
-tarromin seed
-tarromin seed
-harralander seed
-noted fighter torso
-harralander seed
-harralander seed
-ranarr seed
-ranarr seed
-ranarr seed
-noted abyssal tentacle
-toadflax seed
-toadflax seed
-toadflax seed
-toadflax seed
-imbued ancient max cape
-irit seed
-imbued ancient max hood
-irit seed
-imbued ancient max cape (broken)
-avantoe seed
-net trap
-avantoe seed
-imbued ancient cape
-kwuarm seed
-imbued ancient cape (broken)
-kwuarm seed
-imbued ancient cape (l)
-snapdragon seed
-imbued ancient cape
-snapdragon seed
-ancient fabric
-cadantine seed
-supply crate
-pete's vouchers
-lantadyme seed
 marrentill seed
 marrentill seed
 marrentill seed

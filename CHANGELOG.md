@@ -1,3 +1,12 @@
+## [8.4.4](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.3...v8.4.4) (2026-10-08)
+
+
+### Bug Fixes
+
+* Updated item assets for latest game update ([9c0cb30](https://github.com/BigWaspBackup/SRL-B/commit/9c0cb300328ca1357ac7176bc22da2cf634e93c4))
+
+
+
 ## [8.4.3](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.2...v8.4.3) (2026-10-07)
 
 
@@ -31,15 +40,6 @@
 ### Features
 
 * Updated to latest game assets, updated for latest gear renames ([151f0d9](https://github.com/BigWaspBackup/SRL-B/commit/151f0d9dc2d487c18b11776a399bfcd16eed81a7))
-
-
-
-## [8.3.5](https://github.com/BigWaspBackup/SRL-B/compare/v8.3.4...v8.3.5) (2026-09-11)
-
-
-### Bug Fixes
-
-* Update to latest game assets ([155a26f](https://github.com/BigWaspBackup/SRL-B/commit/155a26f3a79bca256ec7563db6254aa474353cb3))
 
 
 

@@ -265,32 +265,55 @@ You probably will never to use this directly.
 *)
 function TRSLogin.ClickWorld(World: Int32): Boolean;
 var
-  B: TBox;
+  attempt, readNumber, wideNumber: Int32;
+  b, wide: TBox;
+  filter: TOCRColorFilter;
+  digits: String;
 begin
-  Self.DebugLn('Looking for world ' + ToString(World) + ' on the login world list');
-  Result := OCR.LocateText(Self.Bounds, ToString(World), RS_FONT_BOLD_12, TOCRColorFilter.Create([$000000]), B) = 1;
+  filter := TOCRColorFilter.Create([$000000]);
 
-  if not Result then
+  for attempt := 1 to 2 do
   begin
-    Self.DebugLn('World ' + ToString(World) + ' was not found on this page');
-    Exit;
-  end;
-
-  Self.DebugLn('World ' + ToString(World) + ' OCR box ' + ToStr(B));
-
-  if (not Self.AllowDangerousWorlds) then
-  begin
-    // Retry instead of term on danger
-    if (SRL.CountColor(CTS1(4089471, 20), B) = 0) and
-       (SRL.CountColor(CTS1(8421504, 25), B) = 0) then
+    Self.DebugLn('Looking for world ' + ToString(World) + ' on the login world list');
+    if OCR.LocateText(Self.Bounds, ToString(World), RS_FONT_BOLD_12, filter, b) <> 1 then
     begin
-      Self.DebugLn('Skipping world ' + ToString(World) + ' - no members/F2P star color in the world-number box (dangerous world or false OCR match)');
-      Exit(False);
+      Self.DebugLn('World ' + ToString(World) + ' was not found on this page');
+      Exit;
     end;
-  end;
 
-  Self.DebugLn('Clicking world ' + ToString(World) + ' at ' + ToStr(B));
-  Mouse.Click(B, MOUSE_LEFT);
+    readNumber := OCR.RecognizeNumber(b, filter, RS_FONT_BOLD_12);
+    digits := ExtractFromStr(OCR.Recognize(b, filter, RS_FONT_BOLD_12), Numbers);
+    wide := b;
+    wide.X1 -= 6;
+    wide.X2 += 6;
+    wideNumber := OCR.RecognizeNumber(wide, filter, RS_FONT_BOLD_12);
+
+    if (readNumber <> World) or (wideNumber <> World) or
+       ((digits <> '') and (digits <> ToString(World))) then
+    begin
+      Self.DebugLn('World list OCR did not confirm ' + ToString(World) +
+        '. Reads ' + ToString(readNumber) + ', wide ' + ToString(wideNumber) + ', text "' + digits + '"');
+      Wait(60, 140);
+      Continue;
+    end;
+
+    Self.DebugLn('World ' + ToString(World) + ' confirmed on the list at ' + ToStr(b));
+
+    if (not Self.AllowDangerousWorlds) then
+    begin
+      // Retry instead of term on danger
+      if (SRL.CountColor(CTS1(4089471, 20), b) = 0) and
+         (SRL.CountColor(CTS1(8421504, 25), b) = 0) then
+      begin
+        Self.DebugLn('Skipping world ' + ToString(World) + ' - no members/F2P star color in the world-number box (dangerous world or false OCR match)');
+        Exit(False);
+      end;
+    end;
+
+    Self.DebugLn('Clicking world ' + ToString(World) + ' at ' + ToStr(b));
+    Mouse.Click(b, MOUSE_LEFT);
+    Exit(True);
+  end;
 end;
 
 (*
@@ -375,16 +398,83 @@ Example:
 WriteLn Login.GetCurrentWorld();
 ```
 *)
+function TRSLogin.ReadLoginWorldSample(): Int32;
+
+  function Agreed(area: TBox): Int32;
+  var
+    filter: TOCRColorFilter;
+    typed, fromText: Int32;
+    digits: String;
+  begin
+    filter := TOCRColorFilter.Create([$FFFFFF]);
+    typed := OCR.RecognizeNumber(area, filter, RS_FONT_BOLD_12);
+    if not InRange(typed, 301, 999) then
+      Exit;
+
+    digits := ExtractFromStr(OCR.Recognize(area, filter, RS_FONT_BOLD_12), Numbers);
+    if Length(digits) = 0 then
+      Exit(typed);
+
+    fromText := StrToIntDef(digits, 0);
+    if (Length(digits) = 3) and (fromText = typed) then
+      Result := typed;
+  end;
+
+var
+  b, line: TBox;
+begin
+  if not Self.FindText('Click to switch', b) then
+    Exit;
+
+  line := b;
+  line.X1 := b.X1 - 10;
+  line.X2 := b.X2 + 10;
+  line.Y2 := b.Y1 - 1;
+  line.Y1 := b.Y1 - 24;
+  Result := Agreed(line);
+  if Result <> 0 then
+    Exit;
+
+  // Older read: the line above the button, still including the button text.
+  line := b;
+  line.Y1 := b.Y1 - 25;
+  Result := Agreed(line);
+end;
+
 function TRSLogin.GetCurrentWorld(): Int32;
 var
-  B: TBox;
+  a, b, c: Int32;
 begin
-  if Self.CloseWorldSwitcher() and Self.FindText('Click to switch', B) then
-  begin
-    B.Y1 -= 25;
+  if not (Self.CloseWorldSwitcher() and Self.IsOpen()) then
+    Exit;
 
-    Result := OCR.RecognizeNumber(B, TOCRColorFilter.Create([$FFFFFF]), RS_FONT_BOLD_12);
-  end;
+  a := Self.ReadLoginWorldSample();
+  Wait(30, 70);
+  b := Self.ReadLoginWorldSample();
+  if (a <> 0) and (a = b) then
+    Exit(a);
+
+  Wait(30, 70);
+  c := Self.ReadLoginWorldSample();
+  if (b <> 0) and (b = c) then
+    Exit(b);
+  if (a <> 0) and (a = c) then
+    Exit(a);
+
+  Self.DebugLn('Login screen world OCR did not agree (' + ToString(a) + ', ' + ToString(b) + ', ' + ToString(c) + ')');
+end;
+
+function TRSLogin.LoginScreenWorldOK(worlds: TIntegerArray): Boolean;
+var
+  current: Int32;
+begin
+  if worlds = [] then
+    Exit(True);
+
+  current := Self.GetCurrentWorld();
+  Result := (current <> 0) and (current in worlds);
+  if not Result then
+    Self.DebugLn('Refusing login. Login screen world ' + ToString(current) + ' is not in ' + ToStr(worlds));
 end;
 
 (*
@@ -414,10 +504,14 @@ begin
     begin
       if Self.ClickWorld(World) then
       begin
+        WaitUntil(Self.IsOpen(), 100, 3000);
         current := Self.GetCurrentWorld();
         Result := current = World;
         if not Result then
+        begin
+          Self.DebugLn('Login screen shows world ' + ToString(current) + ' after selecting ' + ToString(World) + '. Not using this world');
           Self.CloseWorldSwitcher();
+        end;
         Exit;
       end;
 
@@ -462,6 +556,12 @@ begin
   end;
 
   current := Self.GetCurrentWorld();
+  if current = 0 then
+  begin
+    Self.DebugLn('Could not read the login screen world. Not switching worlds this attempt');
+    Exit(False);
+  end;
+
   Self.DebugLn('Login world is ' + ToString(current) + '. Configured worlds: ' + ToStr(worlds) + '. randomHop=' + ToStr(randomHop) + ' hopChance=' + ToString(hopChance));
   shouldHop := not (current in worlds);
   if shouldHop then
@@ -891,6 +991,12 @@ begin
       Continue;
     end;
 
+    if not Self.LoginScreenWorldOK(player.Worlds) then
+    begin
+      Inc(attempts);
+      Continue;
+    end;
+
     if Self.HandleDialogs() then
       Wait(500);
 
@@ -970,6 +1076,12 @@ begin
     Self.DebugLn('Attempt ' + ToString(attempts + 1));
 
     if not Self.PrepareLoginWorld(player.Worlds, randomHop, hopChance) then
+    begin
+      Inc(attempts);
+      Continue;
+    end;
+
+    if not Self.LoginScreenWorldOK(player.Worlds) then
     begin
       Inc(attempts);
       Continue;

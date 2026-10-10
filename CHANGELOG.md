@@ -1,3 +1,12 @@
+## [8.4.8](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.7...v8.4.8) (2026-10-08)
+
+
+### Bug Fixes
+
+* Gear support for new cape and items ([7b434ac](https://github.com/BigWaspBackup/SRL-B/commit/7b434ac1f915a59c2f6992af42c5a3fc6f8d60e7))
+
+
+
 ## [8.4.7](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.6...v8.4.7) (2026-10-08)
 
 
@@ -31,15 +40,6 @@
 ### Bug Fixes
 
 * Updated item assets for latest game update ([9c0cb30](https://github.com/BigWaspBackup/SRL-B/commit/9c0cb300328ca1357ac7176bc22da2cf634e93c4))
-
-
-
-## [8.4.3](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.2...v8.4.3) (2026-10-07)
-
-
-### Bug Fixes
-
-* Updated to support latest OSRS update, New function for emptying containers in bank. ([f31fdfc](https://github.com/BigWaspBackup/SRL-B/commit/f31fdfcb41059d731a8ce81856dfe69c90e76478))
 
 
 

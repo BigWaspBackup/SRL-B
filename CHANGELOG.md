@@ -1,3 +1,12 @@
+## [8.4.9](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.8...v8.4.9) (2026-10-10)
+
+
+### Bug Fixes
+
+* Improvements to door handling and navigation, more debug and failsafes when hopping worlds ([1732ca9](https://github.com/BigWaspBackup/SRL-B/commit/1732ca9c0baf1390a32060b18ab2bb41cad45a43))
+
+
+
 ## [8.4.8](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.7...v8.4.8) (2026-10-08)
 
 
@@ -31,15 +40,6 @@
 ### Bug Fixes
 
 * New game assets/items support ([b9b9ea6](https://github.com/BigWaspBackup/SRL-B/commit/b9b9ea6800cee1d129a346556da9525aeea59b25))
-
-
-
-## [8.4.4](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.3...v8.4.4) (2026-10-08)
-
-
-### Bug Fixes
-
-* Updated item assets for latest game update ([9c0cb30](https://github.com/BigWaspBackup/SRL-B/commit/9c0cb300328ca1357ac7176bc22da2cf634e93c4))
 
 
 

@@ -11497,7 +11497,6 @@ cadantine seed
 lantadyme seed
 dwarf weed seed
 torstol seed
-steam rune
 bag full of gems
 achievement diary cape
 light ballista

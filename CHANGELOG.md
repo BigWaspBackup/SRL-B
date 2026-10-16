@@ -1,3 +1,12 @@
+## [8.4.11](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.10...v8.4.11) (2026-10-16)
+
+
+### Bug Fixes
+
+* Improvements to login screen, improvements to tabs/bank, misc tweaks ([935c7bd](https://github.com/BigWaspBackup/SRL-B/commit/935c7bd27f253f9506ea2fe75db073bd1d8019d4))
+
+
+
 ## [8.4.10](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.9...v8.4.10) (2026-10-14)
 
 
@@ -31,15 +40,6 @@
 ### Bug Fixes
 
 * Improvements to itemfinder ([1fb1288](https://github.com/BigWaspBackup/SRL-B/commit/1fb1288642e91da20ba4a709890a15bd6691e3a4))
-
-
-
-## [8.4.6](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.5...v8.4.6) (2026-10-08)
-
-
-### Bug Fixes
-
-* More new items and assets fixes ([e4f3116](https://github.com/BigWaspBackup/SRL-B/commit/e4f31160cc0f81636cdf4150573b69429787cd3c))
 
 
 

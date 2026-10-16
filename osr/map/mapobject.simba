@@ -594,7 +594,7 @@ Debug(atpa);
 *)
 function TRSObjectV2.FindEx(out cuboids: TCuboidExArray; out atpa: T2DPointArray): Boolean;
 begin
-  if Self.Filter.Walker then
+  if Self.Filter.Walker or (Self.Filter.Finder and (Self.Walker <> nil)) then
   begin
     if Self.Walker = nil then
       TerminateScript(SRL.TimeStamp() + ':[TRSMapObject]:[Fatal]: ' + Self.Name + ' has no walker pointer set.');
@@ -894,7 +894,7 @@ Debug(atpa);
 *)
 function TRSNPCV2.FindEx(out cuboids: TCuboidExArray; out atpa: T2DPointArray): Boolean;
 begin
-  if Self.Filter.Walker or Self.Filter.Minimap then
+  if Self.Filter.Walker or Self.Filter.Minimap or (Self.Filter.Finder and (Self.Walker <> nil)) then
   begin
     cuboids := Self.GetCuboidArray();
     if cuboids = [] then Exit;

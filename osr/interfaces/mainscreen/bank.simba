@@ -765,7 +765,7 @@ begin
 
   if tab = Self.GetCurrentTab() then
   begin
-    if (tab = 0) and not ('howing' in Self.GetTitle()) then
+    if (tab <> 0) or not ('howing' in Self.GetTitle()) then
       Exit(True);
   end;
 

@@ -62,7 +62,7 @@ end;
     _DoorHandler: record
       Door: TRSDoor;
       DoorsOnPath: TRSDoorArray;
-      FlagMoved, Handling, SettingUp, Skipped, Enabled: Boolean;
+      FlagMoved, Handling, SettingUp, Skipped, Opened, Enabled: Boolean;
     end;
   end;
 
@@ -979,8 +979,7 @@ end;
 procedure TRSWalkerV2.SolveDoor(door: TRSDoor; compass: Single);
 var
   rect: TRectangle;
-  middleOfDoorside, doorTile, doorMap, hoverAt, mmPoint: TPoint;
-  tpa: TPointArray;
+  doorTile, doorMap, hoverAt, mmPoint: TPoint;
   upText: String;
   height, i: Int32;
   heights: TIntegerArray;
@@ -990,6 +989,7 @@ begin
   WaitUntil(not minimap.IsPlayerMoving(), 10, 7000);
 
   Self._DoorHandler.Skipped := False;
+  Self._DoorHandler.Opened := False;
 
   doorMap := [(door.Before.X + door.After.X) div 2, (door.Before.Y + door.After.Y) div 2];
   heights := [0, 4, 6];
@@ -1008,10 +1008,17 @@ begin
       Wait(50, 80);
       upText := Trim(MainScreen.GetUpText());
       Self.DebugLn('Gate height ' + ToStr(height) + ' at ' + ToStr(hoverAt) + ' uptext="' + upText + '"');
+      if upText.ContainsAny(['Close']) then
+      begin
+        Self.DebugLn('Door is already open, walking through');
+        Self._DoorHandler.Opened := True;
+        Exit;
+      end;
       if upText.ContainsAny(['Open', 'Squeeze']) then
       begin
-        Self.DebugLn('Uptext is the door, clicking');
+        Self.DebugLn('Uptext is the door, clicking once');
         Mouse.Click(MOUSE_LEFT);
+        Self._DoorHandler.Opened := True;
         Exit;
       end;
     end;
@@ -1020,29 +1027,34 @@ begin
   else
     Self.DebugLn('Gate line not found, stepping closer');
 
-  if Abs(SRL.DeltaAngle(door.GetDoorAngle,compass)) < 90 then
-    doorTile := door.After
-  else
-    doorTile := door.Before;
+  doorTile := doorMap;
+  mmPoint := Self.MapPointToMinimap(Self.Position(), doorMap, compass);
+  heights := [16, 28, 8];
+  Self.DebugLn('Hovering the door between ' + ToStr(door.Before) + ' and ' + ToStr(door.After));
 
-  rect := Self.GetRectMS(Self.Position(), doorTile);
+  for i := 0 to High(heights) do
+  begin
+    height := heights[i];
+    hoverAt := Minimap.VectorToMS(Vec3(mmPoint.X, mmPoint.Y, height));
+    if not MainScreen.Bounds.Contains(hoverAt) then
+      Continue;
+    Mouse.Move(hoverAt);
+    Wait(50, 80);
+    upText := Trim(MainScreen.GetUpText());
+    Self.DebugLn('Door height ' + ToStr(height) + ' at ' + ToStr(hoverAt) + ' uptext="' + upText + '"');
+    if upText.ContainsAny(['Close', 'Open', 'Squeeze', 'Door']) then
+      Break;
+  end;
 
-  //move mouse to the average of the middle of the bottom edge and the center of the rect
-  // recent addition, shift 3/5 of the way towards the bottom instead of in the middle
-  // potential addition for more randomness: make tpa from line and grow by 1
-  {$IFDEF DEBUG_WALKERV2}
-  RSClient.Image.Clear(MainScreen.Bounds);
-  RSClient.Image.DrawRect(rect, $FFFF00);
-  {$ENDIF}
-
-  tpa := TRSDoor.GetCorners(rect.ToTPA(), door.GetDoorAngle(), compass);
-  middleOfDoorside := [Round((tpa[0].X+tpa[1].X)/2), Round((tpa[0].Y+tpa[1].Y)/2)];
-  hoverAt := [Round((2*rect.Mean().X+3*middleOfDoorside.X)/5), Round((2*rect.Mean().Y+3*middleOfDoorside.Y)/5)];
-
-  Mouse.Move(hoverAt);
-  Wait(60, 100);
-  upText := Trim(MainScreen.GetUpText());
-  Self.DebugLn('Door hover at ' + ToStr(hoverAt) + ' tile ' + ToStr(doorTile) + ' uptext="' + upText + '"');
+  if upText = '' then
+  begin
+    rect := Self.GetRectMS(Self.Position(), door.Before, 12);
+    hoverAt := rect.Mean();
+    Mouse.Move(hoverAt);
+    Wait(60, 100);
+    upText := Trim(MainScreen.GetUpText());
+    Self.DebugLn('Door raised hover at ' + ToStr(hoverAt) + ' uptext="' + upText + '"');
+  end;
 
   if upText = '' then
   begin
@@ -1050,18 +1062,26 @@ begin
     Exit;
   end;
 
+  if upText.ContainsAny(['Close']) then
+  begin
+    Self.DebugLn('Door is already open, walking through');
+    Self._DoorHandler.Opened := True;
+    Exit;
+  end;
+
   if upText.ContainsAny(['Open', 'Squeeze']) then
   begin
-    Self.DebugLn('Uptext is the door, clicking');
+    Self.DebugLn('Uptext is the door, clicking once');
     Mouse.Click(MOUSE_LEFT);
+    Self._DoorHandler.Opened := True;
     Exit;
   end;
 
   if upText.ContainsAny(['Walk here', 'alk her']) then
   begin
-    Self.DebugLn('Uptext is Walk here, clicking the ground to step closer');
-    Self._DoorHandler.Skipped := True;
-    Mouse.Click(MOUSE_LEFT);
+    Self.DebugLn('Uptext is the floor in front of the door, not clicking');
+    if Self.Position().DistanceTo(door.Before) <= 20 then
+      Self._DoorHandler.Opened := True;
     Exit;
   end;
 
@@ -1084,6 +1104,7 @@ var
   playerPoint: TPoint;
   pathToDoor: TPointArray;
   index, fails, doorIndex, postDoorIndex, closerTries, i: Int32;
+  walkThrough: Boolean;
   rect: TRectangle;
   compass, cAngle: Double;
   retryHover: Boolean;
@@ -1165,9 +1186,22 @@ begin
           Self.SolveDoor(Self._DoorHandler.Door, cAngle);
           playerPoint := Self.Position();
 
+          walkThrough := False;
+          if Self._DoorHandler.Opened then
+          begin
+            Self._DoorHandler.Opened := False;
+            walkThrough := True;
+            Self.DebugLn('Door is open, walking through');
+            WaitUntil(Minimap.IsPlayerMoving(), 50, 1200);
+            WaitUntil(not Minimap.IsPlayerMoving(), 50, 4000);
+            if Self.WebGraph^.WalkableClusters.InSameTPA(
+                 RSTranslator.NormalizeDoor(Self.Position()),
+                 RSTranslator.NormalizeDoor(Self._DoorHandler.Door.After)) then
+              Exit(True);
+          end
           { Walk here only steps toward the gate. Wait that out and try the door again.
             Do not click the path on the far side while that step is still moving. }
-          if Self._DoorHandler.Skipped then
+          else if Self._DoorHandler.Skipped then
           begin
             Inc(closerTries);
             Self.DebugLn('Stepped closer to the door (' + ToStr(closerTries) + '), waiting before the next click');
@@ -1191,7 +1225,7 @@ begin
           //if you didnt skip the door you need to check if you are moving towards it
           //if you are not close to the door when you stop moving, it means the door was opened by someone else in the mean time
           //in this case you are not handling the door anymore so you Continue and it will try to handle again
-          if not Self._DoorHandler.Skipped then
+          if (not walkThrough) and (not Self._DoorHandler.Skipped) then
           begin
             Self._DoorHandler.Skipped := False;
             WaitUntil(Minimap.IsPlayerMoving(), 200, 1200);

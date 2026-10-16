@@ -1,3 +1,12 @@
+## [8.4.10](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.9...v8.4.10) (2026-10-14)
+
+
+### Bug Fixes
+
+* Update for latest game update ([15a0937](https://github.com/BigWaspBackup/SRL-B/commit/15a09376bd14c0a746cbc71da9b7d96acfa3aebc))
+
+
+
 ## [8.4.9](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.8...v8.4.9) (2026-10-10)
 
 
@@ -31,15 +40,6 @@
 ### Bug Fixes
 
 * More new items and assets fixes ([e4f3116](https://github.com/BigWaspBackup/SRL-B/commit/e4f31160cc0f81636cdf4150573b69429787cd3c))
-
-
-
-## [8.4.5](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.4...v8.4.5) (2026-10-08)
-
-
-### Bug Fixes
-
-* New game assets/items support ([b9b9ea6](https://github.com/BigWaspBackup/SRL-B/commit/b9b9ea6800cee1d129a346556da9525aeea59b25))
 
 
 

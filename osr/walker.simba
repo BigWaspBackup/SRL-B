@@ -976,6 +976,11 @@ begin
   Self.DebugLn('Door line anchor minimap ' + ToStr(mmPoint) + ' (' + ToStr(Length(best)) + ' px)');
 end;
 
+function WalkerDoorUpText(const upText: String): Boolean;
+begin
+  Result := upText.ContainsAny(['Door', 'Gate', 'Squeeze']);
+end;
+
 procedure TRSWalkerV2.SolveDoor(door: TRSDoor; compass: Single);
 var
   rect: TRectangle;
@@ -1008,6 +1013,8 @@ begin
       Wait(50, 80);
       upText := Trim(MainScreen.GetUpText());
       Self.DebugLn('Gate height ' + ToStr(height) + ' at ' + ToStr(hoverAt) + ' uptext="' + upText + '"');
+      if not WalkerDoorUpText(upText) then
+        Continue;
       if upText.ContainsAny(['Close']) then
       begin
         Self.DebugLn('Door is already open, walking through');
@@ -1042,7 +1049,7 @@ begin
     Wait(50, 80);
     upText := Trim(MainScreen.GetUpText());
     Self.DebugLn('Door height ' + ToStr(height) + ' at ' + ToStr(hoverAt) + ' uptext="' + upText + '"');
-    if upText.ContainsAny(['Close', 'Open', 'Squeeze', 'Door']) then
+    if WalkerDoorUpText(upText) then
       Break;
   end;
 
@@ -1059,6 +1066,12 @@ begin
   if upText = '' then
   begin
     Self.DebugLn('No uptext on the door hover, not clicking');
+    Exit;
+  end;
+
+  if not WalkerDoorUpText(upText) then
+  begin
+    Self.DebugLn('Uptext was "' + upText + '", not a door');
     Exit;
   end;
 
@@ -1391,7 +1404,7 @@ begin
   Wait(60, 100);
   Self.DebugLn('Hard door hover uptext="' + Trim(MainScreen.GetUpText()) + '"');
 
-  if Mainscreen.IsUpText(['Open', 'Squeeze']) then
+  if MainScreen.IsUpText(['Door', 'Gate', 'Squeeze']) and WalkerDoorUpText(Trim(MainScreen.GetUpText())) and Trim(MainScreen.GetUpText()).ContainsAny(['Open', 'Squeeze']) then
   begin
     Self.DebugLn('Hard solve uptext is the door, clicking');
     Mouse.Click(MOUSE_LEFT);

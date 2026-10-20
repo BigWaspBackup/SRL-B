@@ -817,11 +817,18 @@ if Login.EnterField('Login:', 'my user name') and
 function TRSLogin.EnterGame(): Boolean;
 var
   current, timeout, failsafe: UInt64;
+  playBox: TBox;
 begin
   current  := GetTickCount();
   timeout  := current + 15000;
   failsafe := current + Random(5000, 7000);
   Self.DebugLn('Handling lobby screen. Login open=' + ToStr(Self.IsOpen()) + ' world switcher=' + ToStr(Self.IsWorldSwitcherOpen()));
+
+  if Self.IsOpen() and not Self.FindText('CLICK HERE TO PLAY', playBox) then
+  begin
+    Self.DebugLn('Still on the login screen. CLICK HERE TO PLAY was not found, so the play click did not leave login.');
+    Exit;
+  end;
 
   while not RSClient.IsLoggedIn() do
   begin
@@ -891,25 +898,55 @@ Performs a login in the loginscreen with the specified player.
 function TRSLogin.DoLogin(player: TRSLoginPlayer; launcher: Boolean = False): Boolean;
 var
   tpa: TPointArray;
-  atpa: T2DPointArray;
+  atpa, kept: T2DPointArray;
   b: TBox;
+  i, dx, bestDx, best, midX: Int32;
 begin
   if launcher then
   begin
     SRL.FindColors(tpa, CTS0(591881, 12), Self.Bounds);
 
     if tpa = [] then
+    begin
+      Self.DebugLn('Play button color was not found.');
       Exit;
+    end;
 
     atpa := tpa.Cluster(3);
     atpa.FilterDimensions(200, 50, 230, 70);
+    kept := [];
+    for i := 0 to High(atpa) do
+    begin
+      b := atpa[i].Bounds();
+      if (b.X1 <= Self.Bounds.X1 + 2) or (b.Y1 <= Self.Bounds.Y1 + 2) or
+         (b.X2 >= Self.Bounds.X2 - 2) or (b.Y2 >= Self.Bounds.Y2 - 2) then
+        Continue;
+      kept += atpa[i];
+    end;
 
-    if Length(atpa) <> 1 then
+    if Length(kept) = 0 then
+    begin
+      Self.DebugLn('Play button was not found. ' + ToString(Length(atpa)) + ' size matches, none away from the screen edge.');
       Exit;
-    tpa := atpa[0];
+    end;
 
-    b := tpa.Bounds();
+    midX := (Self.Bounds.X1 + Self.Bounds.X2) div 2;
+    best := 0;
+    bestDx := 999999;
+    for i := 0 to High(kept) do
+    begin
+      b := kept[i].Bounds();
+      dx := Abs(((b.X1 + b.X2) div 2) - midX);
+      if dx < bestDx then
+      begin
+        bestDx := dx;
+        best := i;
+      end;
+    end;
+
+    b := kept[best].Bounds();
     b.Y2 -= 18;
+    Self.DebugLn('Clicking launcher play button at ' + ToStr(b));
     Mouse.Click(b, MOUSE_LEFT, True);
     Exit(True);
   end;

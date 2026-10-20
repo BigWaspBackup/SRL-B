@@ -1,3 +1,12 @@
+## [8.4.12](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.11...v8.4.12) (2026-10-20)
+
+
+### Bug Fixes
+
+* Assets updated for latest game update, new items added, Login screen fixed, minor changes to door handling ([37fab55](https://github.com/BigWaspBackup/SRL-B/commit/37fab55ebb18bd6ae723ed3da70ecc0d4f876bf1))
+
+
+
 ## [8.4.11](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.10...v8.4.11) (2026-10-16)
 
 
@@ -31,15 +40,6 @@
 ### Bug Fixes
 
 * Gear support for new cape and items ([7b434ac](https://github.com/BigWaspBackup/SRL-B/commit/7b434ac1f915a59c2f6992af42c5a3fc6f8d60e7))
-
-
-
-## [8.4.7](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.6...v8.4.7) (2026-10-08)
-
-
-### Bug Fixes
-
-* Improvements to itemfinder ([1fb1288](https://github.com/BigWaspBackup/SRL-B/commit/1fb1288642e91da20ba4a709890a15bd6691e3a4))
 
 
 

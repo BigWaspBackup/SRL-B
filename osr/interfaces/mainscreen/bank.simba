@@ -1557,7 +1557,8 @@ begin
     if not WaitUntil(Self.GetButton(ERSBankDepositButton.INVENTORY).Visible , 10 , 5000) then
     Self.Fatal('This script needs the "Deposit Inventory" button visible!');
   end;
-  Result := (Inventory.Count() = 0) or btn.Click();
+  // Inventory.Count() opens the inventory tab and closes the bank.
+  Result := btn.Click();
 end; 
 
 (*

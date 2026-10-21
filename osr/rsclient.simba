@@ -273,8 +273,25 @@ end;
 function TRSClient.GetCurrentClient(): ERSClient;
 var
   win: TOSWindow;
+  {$IFDEF SIMBAHEADLESS}
+  w: TOSWindow;
+  {$ENDIF}
 begin
+  {$IFDEF SIMBAHEADLESS}
+  Result := ERSClient.RUNELITE;
+  for w in GetVisibleWindows() do
+    case w.GetRootWindow().GetTitle() of
+      'Old School RuneScape', 'RuneLite':
+      begin
+        win := w;
+        Break;
+      end;
+    end;
+  if win = 0 then
+    Exit;
+  {$ELSE}
   win := GetSimbaTargetWindow();
+  {$ENDIF}
 
   case win.GetClassName() of
     'JagRenderView', 'JagWindow': Exit(ERSClient.OFFICIAL);

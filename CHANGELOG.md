@@ -1,3 +1,12 @@
+## [8.4.13](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.12...v8.4.13) (2026-10-21)
+
+
+### Bug Fixes
+
+* Birdhouse tweaks ([bbffa09](https://github.com/BigWaspBackup/SRL-B/commit/bbffa09804c4552f8730ab87051a687d479322dc))
+
+
+
 ## [8.4.12](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.11...v8.4.12) (2026-10-20)
 
 
@@ -31,15 +40,6 @@
 ### Bug Fixes
 
 * Improvements to door handling and navigation, more debug and failsafes when hopping worlds ([1732ca9](https://github.com/BigWaspBackup/SRL-B/commit/1732ca9c0baf1390a32060b18ab2bb41cad45a43))
-
-
-
-## [8.4.8](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.7...v8.4.8) (2026-10-08)
-
-
-### Bug Fixes
-
-* Gear support for new cape and items ([7b434ac](https://github.com/BigWaspBackup/SRL-B/commit/7b434ac1f915a59c2f6992af42c5a3fc6f8d60e7))
 
 
 

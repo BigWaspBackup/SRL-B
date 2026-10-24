@@ -242,7 +242,6 @@ function TRSMainScreen.IsUpText(Text: String; Timeout: Int32 = -1): Boolean; ove
 ```
 Returns true if the uptext is found **anywhere**.
 If a `TStringArray`is passed as `Text`, any match will result true.
-
 Example:
 ```pascal
 WriteLn(MainScreen.MainScreen.IsUpText(['Chicken', 'Wolf']));
@@ -251,15 +250,8 @@ WriteLn(MainScreen.MainScreen.IsUpText(['Chicken', 'Wolf']));
 function TRSMainScreen.IsUpText(text: TStringArray; timeout: Int32 = -1): Boolean;
 
   function _IsUpText(): Boolean;
-  var
-    i: Int32;
-    upText: String;
   begin
-    upText := Self.GetUpText();
-
-    for i := 0 to High(text) do
-      if (text[i] in uptext) or (text[i] = upText) then
-        Exit(True);
+    Result := OCRMatch.MatchesAny(Self.GetUpText(), text);
   end;
 
 var

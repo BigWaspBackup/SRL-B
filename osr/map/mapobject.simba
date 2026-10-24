@@ -19,6 +19,8 @@ type
 
     Size: Vector3;
     Coordinates: TPointArray;
+    // Optional tiles to walk to instead of Coordinates
+    WalkCoordinates: TPointArray;
 
     Finder: TRSObjectFinder;
     Offset: Vector3;
@@ -113,6 +115,22 @@ begin
     end;
 end;
 
+
+(*
+## TRSMapObject.GetWalkCoordinates
+```pascal
+function TRSMapObject.GetWalkCoordinates(): TPointArray;
+```
+Returns the tiles the walker should path to when walking to this object.
+Uses **WalkCoordinates** when set, otherwise falls back to **Coordinates**.
+Finding, hovering and clicking always use **Coordinates**.
+*)
+function TRSMapObject.GetWalkCoordinates(): TPointArray;
+begin
+  if Length(Self.WalkCoordinates) > 0 then
+    Exit(Self.WalkCoordinates);
+  Result := Self.Coordinates;
+end;
 
 function TRSMapObject.MapToMM(me: TPoint = [0,0]; angle: Single = $FFFF): TPointArray; constref;
 var
@@ -270,7 +288,7 @@ begin
     Exit;
   end;
 
-  if Self.Filter.UpText and text.ContainsAny(Self.UpText) then Exit(True);
+  if Self.Filter.UpText and OCRMatch.MatchesAny(text, Self.UpText) then Exit(True);
 
   shouldExit := False;
 end;
@@ -301,7 +319,7 @@ begin
     ChooseOption.Select('Cancel');
     Exit;
   end;
-  if Self.Walker^.RedClicked or (Self.Filter.UpText and text.ContainsAny(Self.UpText)) then
+  if Self.Walker^.RedClicked or (Self.Filter.UpText and OCRMatch.MatchesAny(text, Self.UpText)) then
     Exit(True);
   shouldExit := False;
 end;
@@ -1190,7 +1208,7 @@ begin
     if MainScreen.IsUpText(Self.UpText) then Exit(True);
 
     me := Self.Walker^.Position();
-    closest := Self.Walker^.GetClosestPointEx(me, Self.Coordinates, path);
+    closest := Self.Walker^.GetClosestPointEx(me, Self.GetWalkCoordinates(), path);
 
     if path = [] then
     begin
@@ -1318,7 +1336,7 @@ begin
   if (me = [0, 0]) or (Length(Self.Coordinates) = 0) then
     Exit(False);
 
-  p := Self.Walker^.GetClosestPointEx(me, Self.Coordinates, path);
+  p := Self.Walker^.GetClosestPointEx(me, Self.GetWalkCoordinates(), path);
 
   //if the point is not reachable with the webgraph (like a banker behind a booth) then pick nearest node as target
   if path = [] then

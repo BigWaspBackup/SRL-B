@@ -360,7 +360,11 @@ WriteLn Login.IsWorldSwitcherOpen();
 function TRSLogin.IsWorldSwitcherOpen(): Boolean;
 begin
   if SRL.CountColor($FFFFFF, Self.WorldSwitcherCancelBox()) >= 61 then
+  begin
+    if Self.FindText('CLICK HERE TO PLAY') then
+      Exit(False);
     Exit(True);
+  end;
 
   Result := Self.FindText('Cancel');
 end;
@@ -832,17 +836,18 @@ begin
 
   while not RSClient.IsLoggedIn() do
   begin
+    if Self.ClickText('CLICK HERE TO PLAY') then
+    begin
+      Self.DebugLn('Clicked CLICK HERE TO PLAY');
+      if RSClient.IsLoggedIn(5000) then exit(True);
+      Continue;
+    end;
+
     if Self.IsWorldSwitcherOpen() then
     begin
       Self.DebugLn('World select is already open. Closing it instead of clicking the world button');
       Self.CloseWorldSwitcher();
       Continue;
-    end;
-
-    if Self.ClickText('CLICK HERE TO PLAY') then
-    begin
-      Self.DebugLn('Clicked CLICK HERE TO PLAY');
-      if RSClient.IsLoggedIn(5000) then exit(True);
     end;
 
     current := GetTickCount();

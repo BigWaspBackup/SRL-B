@@ -242,7 +242,8 @@ WriteLn ChooseOption.HasOption('Take');
 function TRSChooseOption.HasOption(text: TStringArray; out option: TRSChooseOption_Option; caseSensitive: Boolean = True; closeIfNotFound: Boolean = True): Boolean;
 var
   choices: TRSChooseOption_OptionArray;
-  i, j: Int32;
+  i, j, pass: Int32;
+  found: Boolean;
 begin
   if not Self.Open() then
     Exit;
@@ -250,24 +251,30 @@ begin
   Wait(0, 1000, wdLeft);
   choices := Self.GetOptions();
 
-  for i := 0 to High(text) do
+  if not caseSensitive then
   begin
-    if not caseSensitive then
-      text[i] := Lowercase(text[i]);
-
+    text := text.ToLower();
     for j := 0 to High(choices) do
-    begin
-      if not caseSensitive then
-        choices[j].Text := Lowercase(choices[j].Text);
-
-      if text[i] in choices[j].Text then
-      begin
-        option := choices[j];
-        option.StringIndex := i;
-        Exit(True);
-      end;
-    end;
+      choices[j].Text := Lowercase(choices[j].Text);
   end;
+
+  // pass 0: exact matches anywhere in the menu; pass 1: tolerate OCR misreads
+  for pass := 0 to 1 do
+    for i := 0 to High(text) do
+      for j := 0 to High(choices) do
+      begin
+        if pass = 0 then
+          found := OCRMatch.Strict(choices[j].Text, text[i])
+        else
+          found := OCRMatch.Fuzzy and OCRMatch.Matches(choices[j].Text, text[i]);
+
+        if found then
+        begin
+          option := choices[j];
+          option.StringIndex := i;
+          Exit(True);
+        end;
+      end;
 
   if closeIfNotFound then
   begin
@@ -334,7 +341,7 @@ begin
       if not caseSensitive then
         choices[j].Text := Lowercase(choices[j].Text);
 
-      if text[i] in choices[j].Text then
+      if OCRMatch.Matches(choices[j].Text, text[i]) then
         Result += 1;
     end;
   end;
@@ -420,7 +427,8 @@ end;
 function TRSChooseOption.HasSubOption(text: TStringArray; out option: TRSChooseOption_Option; caseSensitive: Boolean = True; closeIfNotFound: Boolean = True): Boolean;
 var
   choices: TRSChooseOption_OptionArray;
-  i, j: Int32;
+  i, j, pass: Int32;
+  found: Boolean;
 begin
   if not Self.Open() then
     Exit;
@@ -428,24 +436,30 @@ begin
   Wait(0, 1000, wdLeft);
   choices := Self.GetSubOptions();
 
-  for i := 0 to High(text) do
+  if not caseSensitive then
   begin
-    if not caseSensitive then
-      text[i] := Lowercase(text[i]);
-
+    text := text.ToLower();
     for j := 0 to High(choices) do
-    begin
-      if not caseSensitive then
-        choices[j].Text := Lowercase(choices[j].Text);
-
-      if text[i] in choices[j].Text then
-      begin
-        option := choices[j];
-        option.StringIndex := i;
-        Exit(True);
-      end;
-    end;
+      choices[j].Text := Lowercase(choices[j].Text);
   end;
+
+  // pass 0: exact matches anywhere in the menu; pass 1: tolerate OCR misreads
+  for pass := 0 to 1 do
+    for i := 0 to High(text) do
+      for j := 0 to High(choices) do
+      begin
+        if pass = 0 then
+          found := OCRMatch.Strict(choices[j].Text, text[i])
+        else
+          found := OCRMatch.Fuzzy and OCRMatch.Matches(choices[j].Text, text[i]);
+
+        if found then
+        begin
+          option := choices[j];
+          option.StringIndex := i;
+          Exit(True);
+        end;
+      end;
 
   if closeIfNotFound then
   begin

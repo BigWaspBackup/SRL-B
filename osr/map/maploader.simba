@@ -1275,6 +1275,7 @@ begin
 
   for i := 0 to High(chunks) do j += Length(chunks[i].Planes);
 
+  SetLength(Self.Regions, 0);
   SetLength(Self.Regions, j);
 
   Self.Padding := padding;

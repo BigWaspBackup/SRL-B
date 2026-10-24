@@ -491,10 +491,10 @@ begin
     Mouse.Move(Minimap.VectorToMSRect([p.X, p.Y, height]).Mean());
     upText := MainScreen.GetUpText();
 
-    hoveringTarget := upText.ContainsAny(Self.TargetUpText);
+    hoveringTarget := OCRMatch.MatchesAny(upText, Self.TargetUpText);
     if hoveringTarget and (Self.ActionUpText <> []) then
     begin
-      hoveringTarget := upText.ContainsAny(Self.ActionUpText);
+      hoveringTarget := OCRMatch.MatchesAny(upText, Self.ActionUpText);
 
       if not hoveringTarget then
       begin
@@ -503,7 +503,7 @@ begin
         Exit(Self.RedClicked);
       end;
     end
-    else if not upText.ContainsAny(Self.WalkUpText) then
+    else if not OCRMatch.MatchesAny(upText, Self.WalkUpText) then
     begin
       if not ChooseOption.Open() then Exit;
       if not ChooseOption.HasOption(Self.TargetUpText, True, False) then

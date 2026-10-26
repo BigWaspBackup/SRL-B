@@ -143,7 +143,17 @@ begin
   if (Self.PID = 0) then
     Self.PID := GetSimbaTargetPID();
   {$ENDIF}
-  
+  // A headless run from B.A.S.H already has the window from --target.
+  // That does not fill the IDE process id, so the dialog below used to open
+  // and say no client was targeted.
+  if (Self.PID = 0) and IsTargetValid() then
+    Self.PID := GetTargetPID();
+
+  {$IFDEF SIMBAHEADLESS}
+  if (Self.PID = 0) then
+    TerminateScript('No client targeted. Choose a client in B.A.S.H and run again.');
+  {$ENDIF}
+
   try
     if (Self.PID = 0) then
     begin

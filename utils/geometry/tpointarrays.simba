@@ -237,7 +237,9 @@ begin
   Result := AStarTPAEx(Self, matrix, start, goal, diagonalTravel);
   bmp.Init();
   bmp.DrawMatrix(matrix, colorMapID);
+  {$IFNDEF SIMBAHEADLESS}
   ShowBitmap(bmp);
+  {$ENDIF}
   bmp.Free();
 end;
 

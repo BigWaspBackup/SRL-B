@@ -1,3 +1,12 @@
+## [8.4.14](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.13...v8.4.14) (2026-10-24)
+
+
+### Bug Fixes
+
+* Support for improved back chest finding, some fixes to uptext, minor login screen tweaks ([c1b9648](https://github.com/BigWaspBackup/SRL-B/commit/c1b9648e29b62c00f91aba3531f25567f3b454fb))
+
+
+
 ## [8.4.13](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.12...v8.4.13) (2026-10-21)
 
 
@@ -31,15 +40,6 @@
 ### Bug Fixes
 
 * Update for latest game update ([15a0937](https://github.com/BigWaspBackup/SRL-B/commit/15a09376bd14c0a746cbc71da9b7d96acfa3aebc))
-
-
-
-## [8.4.9](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.8...v8.4.9) (2026-10-10)
-
-
-### Bug Fixes
-
-* Improvements to door handling and navigation, more debug and failsafes when hopping worlds ([1732ca9](https://github.com/BigWaspBackup/SRL-B/commit/1732ca9c0baf1390a32060b18ab2bb41cad45a43))
 
 
 

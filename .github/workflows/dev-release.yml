@@ -1,0 +1,35 @@
+# Publishes a pre-release. Update libraries ignores these.
+# Run it from the Actions tab on the branch you want testers to try,
+# or: gh release create v8.4.15-dev --target dev --prerelease --title "v8.4.15-dev" --notes "..."
+name: Dev release
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version number, for example 8.4.15. Published as v8.4.15-dev."
+        required: true
+      notes:
+        description: "What testers should try"
+        required: false
+        default: "Dev build. Not installed by Update libraries."
+
+jobs:
+  dev-release:
+    if: github.repository_owner == 'BigWaspBackup'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Publish pre-release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_NOTES: ${{ inputs.notes }}
+        run: |
+          set -euo pipefail
+          version="${{ inputs.version }}"
+          version="${version#v}"
+          version="${version%-dev}"
+          tag="v${version}-dev"
+          gh release create "$tag" --prerelease --title "$tag" --notes "$RELEASE_NOTES" --target "${{ github.sha }}"

@@ -143,7 +143,9 @@ begin
     tmp.Free();
   end;
 
+  {$IFNDEF SIMBAHEADLESS}
   ShowBitmap(DebugBitmap);
+  {$ENDIF}
   ClientBitmap.Free();
   DebugBitmap.Free();
 end;

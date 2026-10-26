@@ -273,15 +273,23 @@ end;
 function TRSClient.GetCurrentClient(): ERSClient;
 var
   win: TOSWindow;
+  title: String;
   {$IFDEF SIMBAHEADLESS}
   w: TOSWindow;
   {$ENDIF}
 begin
+  Result := ERSClient.UNKNOWN;
+
   {$IFDEF SIMBAHEADLESS}
-  Result := ERSClient.RUNELITE;
-  for w in GetVisibleWindows() do
-    case w.GetRootWindow().GetTitle() of
-      'Old School RuneScape', 'RuneLite':
+  // BASH.exe passes the client chosen in the launcher as --target, and Simba
+  // applies it before the script starts. Use that window. Searching is only
+  // the fallback for a headless run that was given no target.
+  win := GetTargetWindow();
+  if win = 0 then
+    for w in GetVisibleWindows() do
+    begin
+      title := w.GetRootWindow().GetTitle();
+      if (title = 'Old School RuneScape') or (title = 'RuneLite') or (Copy(title, 1, 9) = 'RuneLite ') then
       begin
         win := w;
         Break;
@@ -297,10 +305,11 @@ begin
     'JagRenderView', 'JagWindow': Exit(ERSClient.OFFICIAL);
   end;
 
-  case win.GetRootWindow().GetTitle() of
-    'Old School RuneScape': Result := ERSClient.LEGACY;
-    'RuneLite': Result := ERSClient.RUNELITE;
-  end;
+  title := win.GetRootWindow().GetTitle();
+  if title = 'Old School RuneScape' then
+    Result := ERSClient.LEGACY
+  else if (title = 'RuneLite') or (Copy(title, 1, 9) = 'RuneLite ') then
+    Result := ERSClient.RUNELITE;
 end;
 
 function TRSClient.Revalidate(): Boolean;
@@ -312,6 +321,12 @@ var
   b: TBox;
 begin
   if IsTargetValid() then Exit(True);
+
+  {$IFDEF SIMBAHEADLESS}
+  // No IDE to read a target from. --target is the only source, and it is
+  // already applied when valid. GetSimbaTargetPID needs the IDE window.
+  Exit(False);
+  {$ENDIF}
 
   pid := GetSimbaTargetPID();
   wins := GetWindows().GetByClass('SunAwtCanvas');
@@ -358,9 +373,7 @@ begin
 
   if not Self.Revalidate() then TerminateScript('Please refocus the client!');
 
-  {$IFNDEF SIMBAHEADLESS}
   Self.Client := Self.GetCurrentClient();
-  {$ENDIF}
 
   {$IFDEF SRL_USE_REMOTEINPUT}
   Self.RemoteInput.Setup();

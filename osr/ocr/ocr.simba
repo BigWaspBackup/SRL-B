@@ -96,7 +96,7 @@ begin
     if prev[j] < Result then Result := prev[j];
 end;
 
-function TRSOCRMatcher.Strict(hay, needle: String): Boolean;
+function TRSOCRMatcher.Exact(hay, needle: String): Boolean;
 begin
   Result := (needle in hay) or (needle = hay);
 end;
@@ -106,7 +106,7 @@ var
   h, n: String;
   allowed: Int32;
 begin
-  if Self.Strict(hay, needle) then Exit(True);
+  if Self.Exact(hay, needle) then Exit(True);
   if not Self.Fuzzy then Exit(False);
 
   n := Self.Normalize(needle);
@@ -133,7 +133,7 @@ end;
 function TRSOCRMatcher.MatchesAny(hay: String; needles: TStringArray; out index: Int32): Boolean; overload;
 begin
   for index := 0 to High(needles) do
-    if Self.Strict(hay, needles[index]) then
+    if Self.Exact(hay, needles[index]) then
       Exit(True);
 
   if Self.Fuzzy then

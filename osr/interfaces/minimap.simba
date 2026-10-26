@@ -517,7 +517,7 @@ end;
 
 function TRSMinimap.IsRunEnabled(): Boolean;
 begin
-  Result := SRL.CountColor(CTS2(4211520, 6, 2.84, 0.14), Self.Orbs[ERSMinimapOrb.ENERGY].Bounds) = 0;
+  Result := SRL.CountColor(CTS2(3785959, 22, 0.06, 0.95), Self.Orbs[ERSMinimapOrb.ENERGY].Bounds) > 0;
 end;
 
 function TRSMinimap.IsPrayerEnabled(): Boolean;

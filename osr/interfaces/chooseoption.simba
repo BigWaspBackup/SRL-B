@@ -264,7 +264,7 @@ begin
       for j := 0 to High(choices) do
       begin
         if pass = 0 then
-          found := OCRMatch.Strict(choices[j].Text, text[i])
+          found := OCRMatch.Exact(choices[j].Text, text[i])
         else
           found := OCRMatch.Fuzzy and OCRMatch.Matches(choices[j].Text, text[i]);
 
@@ -449,7 +449,7 @@ begin
       for j := 0 to High(choices) do
       begin
         if pass = 0 then
-          found := OCRMatch.Strict(choices[j].Text, text[i])
+          found := OCRMatch.Exact(choices[j].Text, text[i])
         else
           found := OCRMatch.Fuzzy and OCRMatch.Matches(choices[j].Text, text[i]);
 

@@ -1188,6 +1188,9 @@ begin
 
   for attempt := 0 to attempts do
   begin
+    if (Length(Self.WalkCoordinates) > 0) and Minimap.IsPlayerMoving() then
+      Minimap.WaitMoving();
+
     if Self.Find(atpa) then
     begin
       if attempt < 2 then
@@ -1316,7 +1319,9 @@ function TRSMapObject.WalkHover(attempts: Int32 = 2): Boolean;
 var
   p, me: TPoint;
   path: TPointArray;
-  same: Boolean;
+  same, useApproach: Boolean;
+  savedScreen, savedAdaptive: Boolean;
+  savedTarget: TStringArray;
 begin
   if ChooseOption.IsOpen() then
   begin
@@ -1337,27 +1342,61 @@ begin
     Exit(False);
 
   p := Self.Walker^.GetClosestPointEx(me, Self.GetWalkCoordinates(), path);
+  useApproach := Length(Self.WalkCoordinates) > 0;
 
-  //if the point is not reachable with the webgraph (like a banker behind a booth) then pick nearest node as target
-  if path = [] then
+  // Walk to the tile in front of the object with screen-clicking off. Clicking
+  // the object or its minimap icon while still running lands behind it.
+  if useApproach then
   begin
-    path := Self.Walker^.WebGraph^.FindObjectPath(me, p);
-    if path = [] then
-      Exit(False);
-    same := True;
+    savedScreen := Self.Walker^.ScreenWalk;
+    savedAdaptive := Self.Walker^.AdaptiveWalk;
+    savedTarget := Copy(Self.Walker^.TargetUpText);
+    Self.Walker^.ScreenWalk := False;
+    Self.Walker^.AdaptiveWalk := False;
+    Self.Walker^.TargetUpText := [];
+    Self.Walker^.RedClicked := False;
   end;
 
-  // check if doors need to be passed to reach target
-  if same or Self.Walker^.WebGraph^.WalkableClusters.InSameTPA(me, p) then
-  begin
-    if not Self.Walker^.MakePointVisible(p) and not Self.Walker^.WebWalkEx(me, p, 30, 0.15) then
-      Exit;
-  end
-  else
-  if not Self.Walker^.WebWalk(p, 30, 0.15) then
-    Exit;
+  try
+    if useApproach then
+    begin
+      if not me.InRange(p, 30) then
+        if not Self.Walker^.WebWalk(p, 30, 0) then
+          Exit(False);
+      if Minimap.IsPlayerMoving() then
+        Minimap.WaitMoving();
+    end
+    else
+    begin
+      //if the point is not reachable with the webgraph (like a banker behind a booth) then pick nearest node as target
+      if path = [] then
+      begin
+        path := Self.Walker^.WebGraph^.FindObjectPath(me, p);
+        if path = [] then
+          Exit(False);
+        same := True;
+      end;
 
-  Result := Self._WalkHoverHelper(attempts, Self.TrackTarget);
+      // check if doors need to be passed to reach target
+      if same or Self.Walker^.WebGraph^.WalkableClusters.InSameTPA(me, p) then
+      begin
+        if not Self.Walker^.MakePointVisible(p) and not Self.Walker^.WebWalkEx(me, p, 30, 0.15) then
+          Exit;
+      end
+      else
+      if not Self.Walker^.WebWalk(p, 30, 0.15) then
+        Exit;
+    end;
+
+    Result := Self._WalkHoverHelper(attempts, Self.TrackTarget);
+  finally
+    if useApproach then
+    begin
+      Self.Walker^.ScreenWalk := savedScreen;
+      Self.Walker^.AdaptiveWalk := savedAdaptive;
+      Self.Walker^.TargetUpText := savedTarget;
+    end;
+  end;
 end;
 
 

@@ -1,3 +1,12 @@
+# [8.5.0](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.14...v8.5.0) (2026-10-26)
+
+
+### Features
+
+* Prepared support for new BashLauncher, Fixes for tormented demons due to latest game update. ([5111322](https://github.com/BigWaspBackup/SRL-B/commit/51113228596f54e887d78076f6901eb7c48e31e5))
+
+
+
 ## [8.4.14](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.13...v8.4.14) (2026-10-24)
 
 
@@ -31,15 +40,6 @@
 ### Bug Fixes
 
 * Improvements to login screen, improvements to tabs/bank, misc tweaks ([935c7bd](https://github.com/BigWaspBackup/SRL-B/commit/935c7bd27f253f9506ea2fe75db073bd1d8019d4))
-
-
-
-## [8.4.10](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.9...v8.4.10) (2026-10-14)
-
-
-### Bug Fixes
-
-* Update for latest game update ([15a0937](https://github.com/BigWaspBackup/SRL-B/commit/15a09376bd14c0a746cbc71da9b7d96acfa3aebc))
 
 
 

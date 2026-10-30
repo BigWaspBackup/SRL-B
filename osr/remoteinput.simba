@@ -120,10 +120,19 @@ begin
   if Self.EIOS = nil then
     Exit;
 
-  if Self.Image <> nil then
-    Self.Image.DrawClear(0);
-  Self.EnableRealInput();
-  //Self.ReleaseClient();
+  // Turn the real mouse and keyboard back on before anything else. A drawing
+  // error must not leave the client ignoring input after the script stops.
+  try
+    Self.EnableRealInput();
+  except
+  end;
+
+  try
+    if Self.Image <> nil then
+      Self.Image.DrawClear(0);
+  except
+  end;
+
   Self.PID := 0;
   Self.EIOS := nil;
 end;

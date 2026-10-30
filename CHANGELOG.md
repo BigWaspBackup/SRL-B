@@ -1,3 +1,12 @@
+## [8.5.1](https://github.com/BigWaspBackup/SRL-B/compare/v8.5.0...v8.5.1) (2026-10-30)
+
+
+### Bug Fixes
+
+* BASH Launcher 2.0 Support ([4992ef2](https://github.com/BigWaspBackup/SRL-B/commit/4992ef2fc92698b29794d7305e1536127228e525))
+
+
+
 # [8.5.0](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.14...v8.5.0) (2026-10-26)
 
 
@@ -31,15 +40,6 @@
 ### Bug Fixes
 
 * Assets updated for latest game update, new items added, Login screen fixed, minor changes to door handling ([37fab55](https://github.com/BigWaspBackup/SRL-B/commit/37fab55ebb18bd6ae723ed3da70ecc0d4f876bf1))
-
-
-
-## [8.4.11](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.10...v8.4.11) (2026-10-16)
-
-
-### Bug Fixes
-
-* Improvements to login screen, improvements to tabs/bank, misc tweaks ([935c7bd](https://github.com/BigWaspBackup/SRL-B/commit/935c7bd27f253f9506ea2fe75db073bd1d8019d4))
 
 
 

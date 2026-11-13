@@ -1,3 +1,12 @@
+## [8.5.2](https://github.com/BigWaspBackup/SRL-B/compare/v8.5.1...v8.5.2) (2026-11-13)
+
+
+### Bug Fixes
+
+* Improved walker on all scripts when walking longer distances, updated for latest game update. ([fcc4738](https://github.com/BigWaspBackup/SRL-B/commit/fcc47382ee27dfff5b644f99143373af1cfdb719))
+
+
+
 ## [8.5.1](https://github.com/BigWaspBackup/SRL-B/compare/v8.5.0...v8.5.1) (2026-10-30)
 
 
@@ -31,15 +40,6 @@
 ### Bug Fixes
 
 * Birdhouse tweaks ([bbffa09](https://github.com/BigWaspBackup/SRL-B/commit/bbffa09804c4552f8730ab87051a687d479322dc))
-
-
-
-## [8.4.12](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.11...v8.4.12) (2026-10-20)
-
-
-### Bug Fixes
-
-* Assets updated for latest game update, new items added, Login screen fixed, minor changes to door handling ([37fab55](https://github.com/BigWaspBackup/SRL-B/commit/37fab55ebb18bd6ae723ed3da70ecc0d4f876bf1))
 
 
 

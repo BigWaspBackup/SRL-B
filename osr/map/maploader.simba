@@ -1261,6 +1261,145 @@ end;
 {%codetools on}
 
 
+var
+  WEB_FIXES_SKIP: Boolean;
+
+function TRSMapLoader.WebFixesPath(): String;
+begin
+  Result := RSMAP_PATH + 'webgraph-fixes.txt';
+end;
+
+procedure TRSMapLoader.DeleteWebNode(index: Int32; var origin: TPointArray);
+var
+  i, j, n: Int32;
+begin
+  for n in Self.Graph.Paths[index] do
+    Self.Graph.Paths[n].Remove(index, True);
+
+  for i := 0 to High(Self.Graph.Paths) do
+    for j := 0 to High(Self.Graph.Paths[i]) do
+      if Self.Graph.Paths[i][j] > index then
+        Dec(Self.Graph.Paths[i][j]);
+
+  Delete(Self.Graph.Paths, index, 1);
+  Delete(Self.Graph.Nodes, index, 1);
+  if index <= High(origin) then
+    Delete(origin, index, 1);
+  if index <= High(Self.Graph.Names) then
+    Delete(Self.Graph.Names, index, 1);
+end;
+
+procedure TRSMapLoader.ApplyWebFixes(); overload;
+var
+  origin: TPointArray;
+begin
+  Self.ApplyWebFixes(origin);
+end;
+
+procedure TRSMapLoader.ApplyWebFixes(var origin: TPointArray); overload;
+var
+  text, line: String;
+  lines, parts: TStringArray;
+  drops, cuts, joins, moves, adds: TPointArray;
+  moved: TIntegerArray;
+  i, a, b: Int32;
+  p, q: TPoint;
+  track: Boolean;
+begin
+  if not FileExists(Self.WebFixesPath()) then
+    Exit;
+
+  text := ReadFileContents(Self.WebFixesPath()).Replace(#13, '');
+  lines := text.Split(#10);
+
+  for line in lines do
+  begin
+    line := line.Trim();
+    if (line = '') or (line[1] = '#') then
+      Continue;
+
+    parts := line.Split(' ');
+    if (parts[0] = 'MOVE') and (Length(parts) >= 5) then
+    begin
+      moves += [StrToInt(parts[1]), StrToInt(parts[2])];
+      moves += [StrToInt(parts[3]), StrToInt(parts[4])];
+    end;
+    if (parts[0] = 'ADD') and (Length(parts) >= 3) then
+      adds += [StrToInt(parts[1]), StrToInt(parts[2])];
+    if (parts[0] = 'DEL') and (Length(parts) >= 3) then
+      drops += [StrToInt(parts[1]), StrToInt(parts[2])];
+    if (parts[0] = 'CUT') and (Length(parts) >= 5) then
+    begin
+      cuts += [StrToInt(parts[1]), StrToInt(parts[2])];
+      cuts += [StrToInt(parts[3]), StrToInt(parts[4])];
+    end;
+    if (parts[0] = 'JOIN') and (Length(parts) >= 5) then
+    begin
+      joins += [StrToInt(parts[1]), StrToInt(parts[2])];
+      joins += [StrToInt(parts[3]), StrToInt(parts[4])];
+    end;
+  end;
+
+  track := Length(origin) = Length(Self.Graph.Nodes);
+
+  for i := High(Self.Graph.Nodes) downto 0 do
+    if drops.Find(Self.Graph.Nodes[i]) >= 0 then
+      Self.DeleteWebNode(i, origin);
+
+  SetLength(moved, Length(moves) div 2);
+  for i := 0 to High(moved) do
+    moved[i] := Self.Graph.Nodes.Find(moves[i * 2]);
+  for i := 0 to High(moved) do
+    if moved[i] >= 0 then
+      Self.Graph.Nodes[moved[i]] := moves[i * 2 + 1];
+
+  for i := 0 to High(adds) do
+  begin
+    p := adds[i];
+    if Self.Graph.Nodes.Find(p) >= 0 then
+      Continue;
+
+    a := Length(Self.Graph.Nodes);
+    if Length(Self.Graph.Names) = a then
+      SetLength(Self.Graph.Names, a + 1);
+    SetLength(Self.Graph.Nodes, a + 1);
+    Self.Graph.Nodes[a] := p;
+    SetLength(Self.Graph.Paths, a + 1);
+    if track then
+    begin
+      SetLength(origin, a + 1);
+      origin[a] := p;
+    end;
+  end;
+
+  for i := 0 to (Length(cuts) div 2) - 1 do
+  begin
+    p := cuts[i * 2];
+    q := cuts[i * 2 + 1];
+    a := Self.Graph.Nodes.Find(p);
+    b := Self.Graph.Nodes.Find(q);
+    if (a < 0) or (b < 0) then
+      Continue;
+    Self.Graph.Paths[a].Remove(b, True);
+    Self.Graph.Paths[b].Remove(a, True);
+  end;
+
+  for i := 0 to (Length(joins) div 2) - 1 do
+  begin
+    p := joins[i * 2];
+    q := joins[i * 2 + 1];
+    a := Self.Graph.Nodes.Find(p);
+    b := Self.Graph.Nodes.Find(q);
+    if (a < 0) or (b < 0) or (a = b) then
+      Continue;
+    if not InIntArray(Self.Graph.Paths[a], b) then
+    begin
+      Self.Graph.Paths[a] += b;
+      Self.Graph.Paths[b] += a;
+    end;
+  end;
+end;
+
 procedure TRSMapLoader.Load(chunks: array of TRSMapChunk; downscale: UInt32 = 8; padding: UInt32 = 40); overload;
 var
   i, j, idx: Int32;
@@ -1329,7 +1468,11 @@ begin
   Self.Collision  := Self._InternalLoad(cbitmaps);
 
   if not GENERATED_GRAPH.Disabled then
+  begin
     Self.Graph := Self.InternalGraphLoad(graphs);
+    if not WEB_FIXES_SKIP then
+      Self.ApplyWebFixes();
+  end;
 
   Self.ObjectData := Self.InternalJSONLoad(objects);
   Self.NPCData    := Self.InternalJSONLoad(npcs);

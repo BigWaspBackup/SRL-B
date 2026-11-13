@@ -1,0 +1,908 @@
+(*
+# BASH Webber
+Pick one or more chunks, edit the webgraph, then save.
+Edits live in osr/map/webgraph-fixes.txt. Every script applies that file on map load.
+The file is kept as it stands. A save only adds or updates the lines for what changed.
+*)
+
+{$DEFINE SRL_DISABLE_REMOTEINPUT}
+{$I SRL-B/osr.simba}
+
+type
+  TWebber = record
+    Form: TForm;
+    ImageBox: TSimbaImageBox;
+    Graph, Base: TWebGraphV2;
+    Origin, StartPos, StartOrigin: TPointArray;
+    StartPaths: array of TIntegerArray;
+    StartToWork, ToStart: TIntegerArray;
+    Changed: Boolean;
+    Selected, EdgeA, EdgeB: Int32;
+    Dragging: Boolean;
+    Grab, DragStart: TPoint;
+
+    PickForm: TForm;
+    ChunkMemo: TMemo;
+    Picked: array of TRSMapChunk;
+    Opened: Boolean;
+  end;
+
+var
+  Web: TWebber;
+
+function TWebber.NodeAt(x, y: Int32): Int32;
+var
+  i, best, dist: Int32;
+  p: TPoint;
+begin
+  Result := -1;
+  best := 8;
+  for i := 0 to High(Self.Graph.Nodes) do
+  begin
+    p := Self.Graph.Nodes[i];
+    dist := Distance(p.X, p.Y, x, y);
+    if dist <= best then
+    begin
+      best := dist;
+      Result := i;
+    end;
+  end;
+end;
+
+function TWebber.SegmentDistance(p, a, b: TPoint): Int32;
+var
+  abx, aby, len2, t, qx, qy: Double;
+begin
+  abx := b.X - a.X;
+  aby := b.Y - a.Y;
+  len2 := abx * abx + aby * aby;
+  if len2 < 1 then
+    Exit(Distance(p.X, p.Y, a.X, a.Y));
+
+  t := ((p.X - a.X) * abx + (p.Y - a.Y) * aby) / len2;
+  if t < 0 then
+    t := 0;
+  if t > 1 then
+    t := 1;
+
+  qx := a.X + t * abx;
+  qy := a.Y + t * aby;
+  Result := Round(Sqrt((p.X - qx) * (p.X - qx) + (p.Y - qy) * (p.Y - qy)));
+end;
+
+function TWebber.LineAt(x, y: Int32): TPoint;
+var
+  i, j, dist, best: Int32;
+  p, q: TPoint;
+begin
+  Result := Point(-1, -1);
+  best := 5;
+  for i := 0 to High(Self.Graph.Paths) do
+  begin
+    p := Self.Graph.Nodes[i];
+    for j in Self.Graph.Paths[i] do
+    begin
+      if j <= i then
+        Continue;
+      q := Self.Graph.Nodes[j];
+      dist := Self.SegmentDistance(Point(x, y), p, q);
+      if dist <= best then
+      begin
+        best := dist;
+        Result := Point(i, j);
+      end;
+    end;
+  end;
+end;
+
+function TWebber.Linked(const graph: TWebGraphV2; a, b: TPoint): Boolean;
+var
+  i, j: Int32;
+begin
+  i := graph.Nodes.Find(a);
+  j := graph.Nodes.Find(b);
+  Result := (i >= 0) and (j >= 0) and InIntArray(graph.Paths[i], j);
+end;
+
+procedure TWebber.DeleteSelected();
+var
+  i, j, n, curr: Int32;
+begin
+  curr := Self.Selected;
+  if (curr < 0) or (curr > High(Self.Graph.Nodes)) then
+    Exit;
+
+  WriteLn('DEL ' + ToStr(Map.Loader.GetGlobal(Self.Graph.Nodes[curr])));
+  Self.Changed := True;
+
+  if (curr <= High(Self.ToStart)) and (Self.ToStart[curr] >= 0) then
+    Self.StartToWork[Self.ToStart[curr]] := -1;
+  for i := 0 to High(Self.StartToWork) do
+    if Self.StartToWork[i] > curr then
+      Dec(Self.StartToWork[i]);
+  if curr <= High(Self.ToStart) then
+    Delete(Self.ToStart, curr, 1);
+
+  for n in Self.Graph.Paths[curr] do
+    Self.Graph.Paths[n].Remove(curr, True);
+
+  for i := 0 to High(Self.Graph.Paths) do
+    for j := 0 to High(Self.Graph.Paths[i]) do
+      if Self.Graph.Paths[i][j] > curr then
+        Dec(Self.Graph.Paths[i][j]);
+
+  Delete(Self.Graph.Paths, curr, 1);
+  Delete(Self.Graph.Nodes, curr, 1);
+  if curr <= High(Self.Origin) then
+    Delete(Self.Origin, curr, 1);
+  if curr <= High(Self.Graph.Names) then
+    Delete(Self.Graph.Names, curr, 1);
+
+  Self.Selected := -1;
+  Self.EdgeA := -1;
+  Self.EdgeB := -1;
+  Self.Dragging := False;
+  Self.ImageBox.Update();
+end;
+
+procedure TWebber.ClearAll();
+var
+  i: Int32;
+begin
+  for i := 0 to High(Self.StartToWork) do
+    Self.StartToWork[i] := -1;
+
+  Self.Graph.Nodes := [];
+  Self.Graph.Paths := [];
+  Self.Graph.Names := [];
+  Self.Origin := [];
+  Self.ToStart := [];
+  Self.Selected := -1;
+  Self.EdgeA := -1;
+  Self.EdgeB := -1;
+  Self.Dragging := False;
+  Self.Changed := True;
+  WriteLn('CLEARED every node on this map.');
+  Self.ImageBox.Update();
+end;
+
+procedure TWebber.OnClearAll(Sender: TObject);
+begin
+  if Sender = nil then;
+  if Length(Self.Graph.Nodes) = 0 then
+    Exit;
+  if MessageDlg(
+    'BASH Webber',
+    'Are you sure you want to clear all nodes?' + LineEnding + LineEnding +
+    'Save will write those deletions.',
+    mtConfirmation,
+    [mbYes, mbCancel]
+  ) <> mrYes then
+    Exit;
+
+  Self.ClearAll();
+end;
+
+procedure TWebber.DeleteSelectedEdge();
+begin
+  if (Self.EdgeA < 0) or (Self.EdgeB < 0) then
+    Exit;
+  if (Self.EdgeA > High(Self.Graph.Nodes)) or (Self.EdgeB > High(Self.Graph.Nodes)) then
+    Exit;
+
+  WriteLn('CUT ' + ToStr(Map.Loader.GetGlobal(Self.Graph.Nodes[Self.EdgeA])) +
+          ' ' + ToStr(Map.Loader.GetGlobal(Self.Graph.Nodes[Self.EdgeB])));
+  Self.Changed := True;
+
+  Self.Graph.Paths[Self.EdgeA].Remove(Self.EdgeB, True);
+  Self.Graph.Paths[Self.EdgeB].Remove(Self.EdgeA, True);
+  Self.EdgeA := -1;
+  Self.EdgeB := -1;
+  Self.ImageBox.Update();
+end;
+
+procedure TWebber.AddNode(x, y: Int32);
+var
+  n: Int32;
+begin
+  n := Length(Self.Graph.Nodes);
+  if Length(Self.Graph.Names) = n then
+    SetLength(Self.Graph.Names, n + 1);
+  SetLength(Self.Graph.Nodes, n + 1);
+  SetLength(Self.Graph.Paths, n + 1);
+  SetLength(Self.Origin, n + 1);
+  SetLength(Self.ToStart, n + 1);
+  Self.ToStart[n] := -1;
+  Self.Changed := True;
+
+  Self.Graph.Nodes[n] := Point(x, y);
+  Self.Origin[n] := Map.Loader.GetGlobal(Point(x, y));
+  Self.Selected := n;
+  Self.EdgeA := -1;
+  Self.EdgeB := -1;
+  Self.Dragging := True;
+  Self.DragStart := Self.Graph.Nodes[n];
+  Self.Grab := Point(0, 0);
+
+  WriteLn('ADD ' + ToStr(Self.Origin[n]));
+  Self.ImageBox.Update();
+end;
+
+procedure TWebber.OnMouseMove(Sender: TObject; Shift: TShiftState; x, y: Int32);
+begin
+  if not Self.Dragging then
+    Exit;
+  if (Self.Selected < 0) or (Self.Selected > High(Self.Graph.Nodes)) then
+    Exit;
+
+  Self.Graph.Nodes[Self.Selected].X := x - Self.Grab.X;
+  Self.Graph.Nodes[Self.Selected].Y := y - Self.Grab.Y;
+  Self.ImageBox.Update();
+end;
+
+procedure TWebber.OnMouseUp(Sender: TObject; button: TMouseButton; Shift: TShiftState; x, y: Int32);
+begin
+  if button <> mbLeft then
+    Exit;
+  if not Self.Dragging then
+    Exit;
+
+  Self.Dragging := False;
+  if (Self.Selected < 0) or (Self.Selected > High(Self.Graph.Nodes)) then
+    Exit;
+  if Self.Graph.Nodes[Self.Selected] = Self.DragStart then
+    Exit;
+
+  Self.Changed := True;
+  if Self.Base.Nodes.Find(Self.Origin[Self.Selected]) < 0 then
+    WriteLn('ADD ' + ToStr(Map.Loader.GetGlobal(Self.Graph.Nodes[Self.Selected])))
+  else
+    WriteLn('MOVE ' + ToStr(Self.Origin[Self.Selected]) + ' ' +
+            ToStr(Map.Loader.GetGlobal(Self.Graph.Nodes[Self.Selected])));
+end;
+
+procedure TWebber.OnMouseDown(Sender: TObject; button: TMouseButton; Shift: TShiftState; x, y: Int32);
+var
+  hit: Int32;
+  line: TPoint;
+begin
+  if button <> mbLeft then
+    Exit;
+
+  hit := Self.NodeAt(x, y);
+  if (ssShift in Shift) and (Self.Selected > -1) and (hit > -1) and (Self.Selected <> hit) then
+  begin
+    if InIntArray(Self.Graph.Paths[Self.Selected], hit) then
+      WriteLn('CUT ' + ToStr(Map.Loader.GetGlobal(Self.Graph.Nodes[Self.Selected])) +
+              ' ' + ToStr(Map.Loader.GetGlobal(Self.Graph.Nodes[hit])))
+    else
+      WriteLn('JOIN ' + ToStr(Map.Loader.GetGlobal(Self.Graph.Nodes[Self.Selected])) +
+              ' ' + ToStr(Map.Loader.GetGlobal(Self.Graph.Nodes[hit])));
+
+    Self.Graph.ConnectNodes(Self.Selected, hit);
+    Self.Changed := True;
+    Self.EdgeA := -1;
+    Self.EdgeB := -1;
+    Self.ImageBox.Update();
+    Exit;
+  end;
+
+  if hit > -1 then
+  begin
+    Self.Selected := hit;
+    Self.EdgeA := -1;
+    Self.EdgeB := -1;
+    Self.Dragging := True;
+    Self.DragStart := Self.Graph.Nodes[hit];
+    Self.Grab := Point(x - Self.DragStart.X, y - Self.DragStart.Y);
+    Self.ImageBox.Update();
+    Exit;
+  end;
+
+  line := Self.LineAt(x, y);
+  if line.X > -1 then
+  begin
+    Self.Selected := -1;
+    Self.Dragging := False;
+    Self.EdgeA := line.X;
+    Self.EdgeB := line.Y;
+    Self.ImageBox.Update();
+    Exit;
+  end;
+
+  Self.AddNode(x, y);
+end;
+
+procedure TWebber.OnKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  if Key <> VK_DELETE then
+    Exit;
+  if Self.EdgeA > -1 then
+    Self.DeleteSelectedEdge()
+  else
+    Self.DeleteSelected();
+end;
+
+procedure TWebber.PaintArea(Sender: TObject; canvas: TCanvas; r: TRect);
+var
+  i, j, color: Int32;
+  area: TBox;
+  p, q: TPoint;
+begin
+  area := [r.Left, r.Top, r.Right, r.Bottom];
+  canvas.GetPen().SetColor($00FFFF);
+
+  for i := 0 to High(Self.Graph.Paths) do
+  begin
+    p := Self.Graph.Nodes[i];
+    for j in Self.Graph.Paths[i] do
+    begin
+      q := Self.Graph.Nodes[j];
+      if p.InBox(area) or q.InBox(area) then
+      begin
+        canvas.MoveTo(p.X, p.Y);
+        canvas.LineTo(q.X, q.Y);
+      end;
+    end;
+  end;
+
+  if (Self.EdgeA > -1) and (Self.EdgeB > -1) and
+     (Self.EdgeA <= High(Self.Graph.Nodes)) and (Self.EdgeB <= High(Self.Graph.Nodes)) then
+  begin
+    p := Self.Graph.Nodes[Self.EdgeA];
+    q := Self.Graph.Nodes[Self.EdgeB];
+    canvas.GetPen().SetColor($00FF00);
+    canvas.GetPen().SetWidth(3);
+    canvas.MoveTo(p.X, p.Y);
+    canvas.LineTo(q.X, q.Y);
+    canvas.GetPen().SetWidth(1);
+  end;
+
+  for i := 0 to High(Self.Graph.Nodes) do
+  begin
+    p := Self.Graph.Nodes[i];
+    if not p.InBox(area) then
+      Continue;
+
+    color := $0000FF;
+    if i = Self.Selected then
+      color := $FF00FF;
+    canvas.GetBrush().SetColor(color);
+    canvas.FillRect(p.X - 2, p.Y - 2, p.X + 2, p.Y + 2);
+  end;
+end;
+
+function TWebber.FindEdge(const lines: TStringArray; op: String; a, b: TPoint): Int32;
+var
+  i: Int32;
+  parts: TStringArray;
+  p, q: TPoint;
+begin
+  Result := -1;
+  for i := 0 to High(lines) do
+  begin
+    parts := lines[i].Split(' ');
+    if (Length(parts) < 5) or (parts[0] <> op) then
+      Continue;
+    p := Point(StrToInt(parts[1]), StrToInt(parts[2]));
+    q := Point(StrToInt(parts[3]), StrToInt(parts[4]));
+    if ((p = a) and (q = b)) or ((p = b) and (q = a)) then
+      Exit(i);
+  end;
+end;
+
+function TWebber.FindPoint(const lines: TStringArray; op: String; a: TPoint): Int32;
+var
+  i: Int32;
+  parts: TStringArray;
+begin
+  Result := -1;
+  for i := 0 to High(lines) do
+  begin
+    parts := lines[i].Split(' ');
+    if (Length(parts) < 3) or (parts[0] <> op) then
+      Continue;
+    if Point(StrToInt(parts[1]), StrToInt(parts[2])) = a then
+      Exit(i);
+  end;
+end;
+
+procedure TWebber.DropEdgesTouching(var lines: TStringArray; p: TPoint);
+var
+  i: Int32;
+  parts: TStringArray;
+  a, b: TPoint;
+begin
+  for i := High(lines) downto 0 do
+  begin
+    parts := lines[i].Split(' ');
+    if (Length(parts) < 5) or ((parts[0] <> 'JOIN') and (parts[0] <> 'CUT')) then
+      Continue;
+    a := Point(StrToInt(parts[1]), StrToInt(parts[2]));
+    b := Point(StrToInt(parts[3]), StrToInt(parts[4]));
+    if (a = p) or (b = p) then
+      Delete(lines, i, 1);
+  end;
+end;
+
+procedure TWebber.RewritePoint(var lines: TStringArray; fromPt, toPt: TPoint);
+var
+  i, n: Int32;
+  parts: TStringArray;
+  p: TPoint;
+  line: String;
+begin
+  if fromPt = toPt then
+    Exit;
+
+  for i := 0 to High(lines) do
+  begin
+    parts := lines[i].Split(' ');
+    if Length(parts) < 3 then
+      Continue;
+
+    if (parts[0] = 'MOVE') and (Length(parts) >= 5) then
+    begin
+      p := Point(StrToInt(parts[3]), StrToInt(parts[4]));
+      if p <> fromPt then
+        Continue;
+      parts[3] := IntToStr(toPt.X);
+      parts[4] := IntToStr(toPt.Y);
+    end
+    else
+    begin
+      n := 1;
+      while n + 1 <= High(parts) do
+      begin
+        p := Point(StrToInt(parts[n]), StrToInt(parts[n + 1]));
+        if p = fromPt then
+        begin
+          parts[n] := IntToStr(toPt.X);
+          parts[n + 1] := IntToStr(toPt.Y);
+        end;
+        n += 2;
+      end;
+    end;
+
+    line := parts[0];
+    for n := 1 to High(parts) do
+      line += ' ' + parts[n];
+    lines[i] := line;
+  end;
+end;
+
+procedure TWebber.SaveFixes();
+var
+  fixed: TWebGraphV2;
+  i, j, at, wi, wj, si, sj: Int32;
+  lines, old: TStringArray;
+  text, line: String;
+  dirty: Boolean;
+  current: TPoint;
+begin
+  if not Self.Changed then
+  begin
+    WriteLn('No new edits. The fixes file was left as it is.');
+    Exit;
+  end;
+
+  fixed := Self.Graph;
+  fixed.Nodes := Map.Loader.GetGlobal(fixed.Nodes);
+  dirty := False;
+
+  if FileExists(Map.Loader.WebFixesPath()) then
+  begin
+    old := ReadFileContents(Map.Loader.WebFixesPath()).Replace(#13, '').Split(#10);
+    for i := 0 to High(old) do
+    begin
+      line := old[i].Trim();
+      if (line = '') or (line[1] = '#') then
+        Continue;
+      lines += line;
+    end;
+  end;
+
+  for i := 0 to High(Self.StartOrigin) do
+  begin
+    if Self.StartToWork[i] >= 0 then
+      Continue;
+
+    dirty := True;
+    at := Self.FindPoint(lines, 'MOVE', Self.StartOrigin[i]);
+    if at >= 0 then
+      Delete(lines, at, 1);
+    at := Self.FindPoint(lines, 'ADD', Self.StartPos[i]);
+    if at >= 0 then
+      Delete(lines, at, 1);
+    Self.DropEdgesTouching(lines, Self.StartPos[i]);
+
+    if (Self.Base.Nodes.Find(Self.StartOrigin[i]) >= 0) and
+       (Self.FindPoint(lines, 'DEL', Self.StartOrigin[i]) < 0) then
+    begin
+      line := 'DEL ' + IntToStr(Self.StartOrigin[i].X) + ' ' + IntToStr(Self.StartOrigin[i].Y);
+      lines += line;
+      WriteLn(line);
+    end;
+  end;
+
+  for i := 0 to High(Self.Origin) do
+    if Self.ToStart[i] < 0 then
+    begin
+      current := fixed.Nodes[i];
+      if Self.FindPoint(lines, 'ADD', current) >= 0 then
+        Continue;
+      dirty := True;
+      line := 'ADD ' + IntToStr(current.X) + ' ' + IntToStr(current.Y);
+      lines += line;
+      WriteLn(line);
+    end;
+
+  for i := 0 to High(Self.StartPaths) do
+  begin
+    wi := Self.StartToWork[i];
+    if wi < 0 then
+      Continue;
+    for j in Self.StartPaths[i] do
+    begin
+      if j <= i then
+        Continue;
+      wj := Self.StartToWork[j];
+      if wj < 0 then
+        Continue;
+      if InIntArray(fixed.Paths[wi], wj) then
+        Continue;
+
+      at := Self.FindEdge(lines, 'JOIN', Self.StartPos[i], Self.StartPos[j]);
+      if at >= 0 then
+      begin
+        dirty := True;
+        Delete(lines, at, 1);
+        Continue;
+      end;
+
+      if Self.FindEdge(lines, 'CUT', fixed.Nodes[wi], fixed.Nodes[wj]) >= 0 then
+        Continue;
+      dirty := True;
+      line := 'CUT ' + IntToStr(fixed.Nodes[wi].X) + ' ' + IntToStr(fixed.Nodes[wi].Y) + ' ' +
+              IntToStr(fixed.Nodes[wj].X) + ' ' + IntToStr(fixed.Nodes[wj].Y);
+      lines += line;
+      WriteLn(line);
+    end;
+  end;
+
+  for i := 0 to High(fixed.Paths) do
+    for j in fixed.Paths[i] do
+    begin
+      if j <= i then
+        Continue;
+      si := Self.ToStart[i];
+      sj := Self.ToStart[j];
+      if (si >= 0) and (sj >= 0) and InIntArray(Self.StartPaths[si], sj) then
+        Continue;
+
+      if (si >= 0) and (sj >= 0) then
+      begin
+        at := Self.FindEdge(lines, 'CUT', Self.StartPos[si], Self.StartPos[sj]);
+        if at < 0 then
+          at := Self.FindEdge(lines, 'CUT', fixed.Nodes[i], fixed.Nodes[j]);
+        if at >= 0 then
+        begin
+          dirty := True;
+          Delete(lines, at, 1);
+          Continue;
+        end;
+      end;
+
+      if Self.FindEdge(lines, 'JOIN', fixed.Nodes[i], fixed.Nodes[j]) >= 0 then
+        Continue;
+      dirty := True;
+      line := 'JOIN ' + IntToStr(fixed.Nodes[i].X) + ' ' + IntToStr(fixed.Nodes[i].Y) + ' ' +
+              IntToStr(fixed.Nodes[j].X) + ' ' + IntToStr(fixed.Nodes[j].Y);
+      lines += line;
+      WriteLn(line);
+    end;
+
+  for i := 0 to High(Self.StartOrigin) do
+  begin
+    wi := Self.StartToWork[i];
+    if wi < 0 then
+      Continue;
+    if fixed.Nodes[wi] = Self.StartPos[i] then
+      Continue;
+
+    dirty := True;
+    if Self.Base.Nodes.Find(Self.StartOrigin[i]) < 0 then
+      Self.RewritePoint(lines, Self.StartPos[i], fixed.Nodes[wi])
+    else
+    begin
+      Self.RewritePoint(lines, Self.StartPos[i], fixed.Nodes[wi]);
+      at := Self.FindPoint(lines, 'MOVE', Self.StartOrigin[i]);
+      if fixed.Nodes[wi] = Self.StartOrigin[i] then
+      begin
+        if at >= 0 then
+          Delete(lines, at, 1);
+      end
+      else if at < 0 then
+      begin
+        line := 'MOVE ' + IntToStr(Self.StartOrigin[i].X) + ' ' + IntToStr(Self.StartOrigin[i].Y) + ' ' +
+                IntToStr(fixed.Nodes[wi].X) + ' ' + IntToStr(fixed.Nodes[wi].Y);
+        lines += line;
+        WriteLn(line);
+      end
+      else
+        WriteLn(lines[at]);
+    end;
+  end;
+
+  if not dirty then
+  begin
+    WriteLn('No new edits. The fixes file was left as it is.');
+    Exit;
+  end;
+
+  text := '# Hand edits for the generated webgraph. Coordinates are global walker points.' + LineEnding;
+  text += '# MOVE x1 y1 x2 y2    move a node' + LineEnding;
+  text += '# ADD  x y            add a node' + LineEnding;
+  text += '# DEL  x y            remove a node' + LineEnding;
+  text += '# CUT  x1 y1 x2 y2    remove a link' + LineEnding;
+  text += '# JOIN x1 y1 x2 y2    add a link' + LineEnding;
+  text += '# Existing lines stay. A save only adds or updates what changed.' + LineEnding;
+
+  for i := 0 to High(lines) do
+    text += lines[i] + LineEnding;
+
+  if not WriteFileContents(Map.Loader.WebFixesPath(), text, False) then
+    WriteLn('Could not save ' + Map.Loader.WebFixesPath())
+  else
+    WriteLn('Saved ' + Map.Loader.WebFixesPath());
+end;
+
+procedure TWebber.OnSave(Sender: TObject);
+begin
+  Self.SaveFixes();
+end;
+
+procedure TWebber.OnSaveClose(Sender: TObject);
+begin
+  Self.Form.Close();
+end;
+
+procedure TWebber.OnClose(Sender: TObject; var closeAction: TCloseAction);
+begin
+  Self.SaveFixes();
+end;
+
+procedure TWebber.OnOpenClick(Sender: TObject);
+var
+  i, j, n, x1, y1, x2, y2: Int32;
+  planes: TIntegerArray;
+  text, part: String;
+  rows, parts, planeParts: TStringArray;
+  nums: TIntegerArray;
+begin
+  Self.Picked := [];
+  rows := Self.ChunkMemo.GetText().Replace(#13, '').Split(#10);
+
+  for i := 0 to High(rows) do
+  begin
+    text := rows[i].Trim();
+    if (text = '') or (text[1] = '#') then
+      Continue;
+
+    parts := text.Split(' ');
+    nums := [];
+    planes := [];
+    try
+      for j := 0 to High(parts) do
+      begin
+        part := parts[j].Trim();
+        if part = '' then
+          Continue;
+        if j = High(parts) then
+        begin
+          planeParts := part.Split(',');
+          if Length(planeParts) > 1 then
+          begin
+            for n := 0 to High(planeParts) do
+              planes += StrToInt(planeParts[n].Trim());
+            Continue;
+          end;
+        end;
+        nums += StrToInt(part);
+      end;
+    except
+      WriteLn('Could not read: ' + text);
+      Exit;
+    end;
+
+    if Length(nums) < 4 then
+    begin
+      WriteLn('Each line needs x1 y1 x2 y2, then an optional plane list.');
+      Exit;
+    end;
+
+    x1 := nums[0];
+    y1 := nums[1];
+    x2 := nums[2];
+    y2 := nums[3];
+    if Length(nums) > 4 then
+      for j := 4 to High(nums) do
+        planes += nums[j];
+    if planes = [] then
+      planes := [0];
+
+    Self.Picked += Chunk(Box(x1, y1, x2, y2), planes);
+    WriteLn(ToStr(Box(x1, y1, x2, y2)) + ' planes ' + ToStr(planes));
+  end;
+
+  if Length(Self.Picked) = 0 then
+  begin
+    WriteLn('Type at least one chunk.');
+    Exit;
+  end;
+
+  Self.Opened := True;
+  Self.PickForm.Close();
+end;
+
+procedure TWebber.OnCancelClick(Sender: TObject);
+begin
+  Self.Opened := False;
+  Self.PickForm.Close();
+end;
+
+function TWebber.PickChunks(): Boolean;
+var
+  caption: TLabel;
+  button: TButton;
+begin
+  Self.Opened := False;
+
+  Self.PickForm.Init(nil);
+  Self.PickForm.SetPosition(poScreenCenter);
+  Self.PickForm.SetCaption('BASH Webber');
+  Self.PickForm.SetWidth(460);
+  Self.PickForm.SetHeight(420);
+
+  caption.Init(Self.PickForm);
+  caption.SetParent(Self.PickForm);
+  caption.SetLeft(12);
+  caption.SetTop(12);
+  caption.SetWidth(430);
+  caption.SetCaption('One chunk per line: x1 y1 x2 y2 planes');
+
+  Self.ChunkMemo.Init(Self.PickForm);
+  Self.ChunkMemo.SetParent(Self.PickForm);
+  Self.ChunkMemo.SetLeft(12);
+  Self.ChunkMemo.SetTop(36);
+  Self.ChunkMemo.SetWidth(420);
+  Self.ChunkMemo.SetHeight(280);
+  Self.ChunkMemo.SetText(
+    '# Mahogany Homes' + LineEnding +
+    '45 53 47 51 0,1' + LineEnding +
+    '40 52 41 51 0,1' + LineEnding +
+    '49 55 51 52 0,1' + LineEnding +
+    '25 57 29 53 0,1'
+  );
+
+  button.Init(Self.PickForm);
+  button.SetParent(Self.PickForm);
+  button.SetBounds(12, 332, 200, 32);
+  button.SetCaption('Open');
+  button.SetOnClick(@Self.OnOpenClick);
+
+  button.Init(Self.PickForm);
+  button.SetParent(Self.PickForm);
+  button.SetBounds(232, 332, 200, 32);
+  button.SetCaption('Cancel');
+  button.SetOnClick(@Self.OnCancelClick);
+
+  WriteLn('Type the chunks to load. One line is x1 y1 x2 y2, then the planes.');
+  Self.PickForm.ShowModal();
+  Self.PickForm.Free();
+  Result := Self.Opened;
+end;
+
+procedure TWebber.Run();
+var
+  i: Int32;
+  panel: TPanel;
+  button: TButton;
+begin
+  if not Self.PickChunks() then
+    Exit;
+
+  WEB_FIXES_SKIP := True;
+  WriteLn('Loading map...');
+  Map.Loader.Load(Self.Picked);
+  WEB_FIXES_SKIP := False;
+  AddOnTerminate(@Map.Loader.Free);
+
+  Self.Base.Nodes := System.Copy(Map.Loader.Graph.Nodes);
+  SetLength(Self.Base.Paths, Length(Map.Loader.Graph.Paths));
+  for i := 0 to High(Self.Base.Paths) do
+    Self.Base.Paths[i] := System.Copy(Map.Loader.Graph.Paths[i]);
+
+  Self.Origin := System.Copy(Map.Loader.Graph.Nodes);
+  Map.Loader.ApplyWebFixes(Self.Origin);
+  Self.StartPos := System.Copy(Map.Loader.Graph.Nodes);
+  Self.StartOrigin := System.Copy(Self.Origin);
+  SetLength(Self.StartPaths, Length(Map.Loader.Graph.Paths));
+  for i := 0 to High(Self.StartPaths) do
+    Self.StartPaths[i] := System.Copy(Map.Loader.Graph.Paths[i]);
+  SetLength(Self.StartToWork, Length(Self.StartOrigin));
+  SetLength(Self.ToStart, Length(Self.Origin));
+  for i := 0 to High(Self.StartToWork) do
+  begin
+    Self.StartToWork[i] := i;
+    Self.ToStart[i] := i;
+  end;
+  Self.Changed := False;
+  Self.Graph := Map.Loader.Graph;
+  Self.Graph.Nodes := Map.Loader.GetLocal(Self.Graph.Nodes);
+  Self.Selected := -1;
+  Self.EdgeA := -1;
+  Self.EdgeB := -1;
+  Self.Dragging := False;
+
+  Self.Form.Init(nil);
+  Self.Form.SetPosition(poScreenCenter);
+  Self.Form.SetCaption('BASH Webber');
+  Self.Form.SetWidth(1200);
+  Self.Form.SetHeight(900);
+  Self.Form.SetOnClose(@Self.OnClose);
+  Self.Form.SetOnKeyDown(@Self.OnKeyDown);
+
+  panel.Init(Self.Form);
+  panel.SetParent(Self.Form);
+  panel.SetAlign(alTop);
+  panel.SetHeight(36);
+
+  button.Init(panel);
+  button.SetParent(panel);
+  button.SetAlign(alRight);
+  button.SetAutoSize(True);
+  button.SetCaption('Save and close');
+  button.SetOnClick(@Self.OnSaveClose);
+
+  button.Init(panel);
+  button.SetParent(panel);
+  button.SetAlign(alRight);
+  button.SetAutoSize(True);
+  button.SetCaption('Save');
+  button.SetOnClick(@Self.OnSave);
+
+  button.Init(panel);
+  button.SetParent(panel);
+  button.SetAlign(alRight);
+  button.SetAutoSize(True);
+  button.SetCaption('Clear all');
+  button.SetOnClick(@Self.OnClearAll);
+
+  Self.ImageBox.Init(Self.Form);
+  Self.ImageBox.SetParent(Self.Form);
+  Self.ImageBox.SetAlign(alClient);
+  Self.ImageBox.SetOnPaintArea(@Self.PaintArea);
+  Self.ImageBox.SetOnMouseDown(@Self.OnMouseDown);
+  Self.ImageBox.SetOnMouseMove(@Self.OnMouseMove);
+  Self.ImageBox.SetOnMouseUp(@Self.OnMouseUp);
+  Self.ImageBox.SetOnKeyDown(@Self.OnKeyDown);
+  Self.ImageBox.GetBackground().LoadFromMufasaBitmap(Map.Loader.Map);
+  Self.ImageBox.BackgroundChanged();
+
+  WriteLn('Click a node to select it. Drag it to move it.');
+  WriteLn('Click an empty spot to add a node.');
+  WriteLn('Click a line to select it. Delete removes that line, or the selected node.');
+  WriteLn('Shift+click another node to link or unlink it.');
+  WriteLn('Right-drag to pan. Ctrl+wheel to zoom.');
+  WriteLn('Save keeps every existing fix and only writes what you changed.');
+  WriteLn('Clear all asks first, then deletes every node on this map.');
+
+  Self.ImageBox.Update();
+  Self.Form.ShowModal();
+  Self.Form.Free();
+end;
+
+begin
+  Sync(@Web.Run);
+end.

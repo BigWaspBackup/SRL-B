@@ -309,10 +309,7 @@ var
     h, diff: Single;
   begin
     angle := Minimap.GetCompassAngle(False);
-    idx := Self._PathIndex;
-
-    while (idx < High(Self._Path)) and Self.IsWalkable(Self._Path[idx+1], myPos, angle) do
-      Inc(idx);
+    idx := Self._FurthestForward(Self._PathIndex, Self._PathIndex, myPos, angle);
 
     if (Idx = High(Self._Path)) and (Random(10) > 2) then Exit();
 
@@ -775,30 +772,127 @@ begin
   Result += tpa[High(tpa)];
 end;
 
+// Closest path tile at or behind `committed`. Searching the whole path can snap
+// onto a later stretch that passes near the player, which is back the way we came.
+function TRSWalkerV2._NearestCommitted(playerPoint: TPoint; committed: Int32): Int32;
+var
+  i, limit: Int32;
+  dist, bestDist: Double;
+begin
+  Result := committed;
+  if Length(Self._Path) = 0 then
+    Exit;
+  if Result < 0 then
+    Result := 0;
+  if Result > High(Self._Path) then
+    Result := High(Self._Path);
+
+  bestDist := Self._Path[Result].DistanceTo(playerPoint);
+  limit := Result - 80;
+  if limit < 0 then
+    limit := 0;
+
+  for i := Result - 1 downto limit do
+  begin
+    dist := Self._Path[i].DistanceTo(playerPoint);
+    if dist < bestDist then
+    begin
+      bestDist := dist;
+      Result := i;
+    end
+    else if dist > bestDist + (RSTranslator.TileSize * 6) then
+      Break;
+  end;
+end;
+
+// Fix walk shit
+function TRSWalkerV2._FurthestForward(fromIndex, committed: Int32; playerPoint: TPoint; angle: Double): Int32;
+var
+  i: Int32;
+  dist, bestDist: Double;
+begin
+  Result := committed;
+  if Length(Self._Path) = 0 then
+    Exit;
+  if fromIndex < 0 then
+    fromIndex := 0;
+  if Result < 0 then
+    Result := 0;
+  if fromIndex > High(Self._Path) then
+    fromIndex := High(Self._Path);
+  if Result > High(Self._Path) then
+    Result := High(Self._Path);
+
+  bestDist := Self._Path[Result].DistanceTo(playerPoint);
+
+  if fromIndex > committed then
+  begin
+    dist := Self._Path[fromIndex].DistanceTo(playerPoint);
+    if dist > bestDist then
+    begin
+      bestDist := dist;
+      Result := fromIndex;
+    end;
+  end;
+
+  i := fromIndex;
+  while (i < High(Self._Path)) and Self.IsWalkable(Self._Path[i + 1], playerPoint, angle) do
+  begin
+    Inc(i);
+    if i <= committed then
+      Continue;
+
+    dist := Self._Path[i].DistanceTo(playerPoint);
+    if dist + (RSTranslator.TileSize * 2) < bestDist then
+      Break;
+    if dist > bestDist then
+    begin
+      bestDist := dist;
+      Result := i;
+    end;
+  end;
+end;
+
 function TRSWalkerV2._AdvancePath(out index: Int32; playerPoint: TPoint; angle: Double): Boolean;
 var
-  previous: Int32;
-  nearest, furthest: Int32;
+  previous, nearest, furthest, low: Int32;
 begin
   previous := index;
-  nearest := Self._Path.Find(Self._Path.Sorted(playerPoint)[0]);
-  Self._Pathindex := nearest;
+  if previous < 0 then
+    previous := 0;
+  if (Length(Self._Path) > 0) and (previous > High(Self._Path)) then
+    previous := High(Self._Path);
 
-  while (nearest < High(Self._Path)) and (not Self.IsWalkable(Self._Path[nearest+1], playerPoint, angle)) do
+  nearest := Self._NearestCommitted(playerPoint, previous);
+
+  while (nearest < High(Self._Path)) and (not Self.IsWalkable(Self._Path[nearest + 1], playerPoint, angle)) do
     Inc(nearest);
 
-  furthest := nearest;
-  while (furthest < High(Self._Path)) and Self.IsWalkable(Self._Path[furthest+1], playerPoint, angle) do
-    Inc(furthest);
+  furthest := Self._FurthestForward(nearest, previous, playerPoint, angle);
+
+  // The route turned back, or we have not reached the tile we already clicked.
+  // Keep that
+  if furthest <= previous then
+  begin
+    index := previous;
+    Self._PathIndex := previous;
+    Result := False;
+    Exit;
+  end;
+
+  low := previous;
+  if nearest > low then
+    low := nearest;
+  if low > furthest then
+    low := furthest;
 
   index := furthest;
+  Result := True;
 
-  // do the result check before randomness to avoid false error
-  Result := index > previous;
+  if (Random() < 0.15) and (low < furthest) then
+    index := Random(low, furthest);
 
-  // 15% chance of randomness else furthest
-  if Random() < 0.15 then
-    index := Random(nearest, furthest);
+  Self._PathIndex := index;
 end;
 
 procedure TRSWalkerV2._WalkPathSetup(path: TPointArray);
@@ -827,7 +921,13 @@ begin
 
   if Self._AdvancePath(index, playerPoint, angle) then Exit(0);
 
-  //Likely haven't moved far enough to advance to next point
+  if Minimap.IsPlayerMoving() and (index >= 0) and (index <= High(Self._Path)) then
+  begin
+    Self.WaitMoving(Self._Path[index], RSTranslator.TileSize);
+    Exit(fails + 1);
+  end;
+
+  //Likely haven't moved far enough to advancek
   if Inc(Result) < 5 then
   begin
     Wait(300);
@@ -1314,6 +1414,35 @@ begin
   Result := Self.WalkPath([Destination], WaitUntilDistance);
 end;
 
+function TRSWalkerV2.StepOntoWeb(): Boolean;
+var
+  me, spot: TPoint;
+  area: TCircle;
+  spots: TPointArray;
+begin
+  Result := True;
+  if Self.WebGraph = nil then
+    Exit;
+  me := Self.Position();
+  if (me = [0, 0]) or not Self.WebGraph^.UseCollisionData then
+    Exit;
+  if Self.WebGraph^.WalkableSpace.Contains(me) then
+    Exit;
+
+  spot := Self.WebGraph^.NearestWalkablePoint(me);
+  if spot = me then
+  begin
+    area := [me.X, me.Y, 80];
+    spots := area.ToTPA(True).Intersection(Self.WebGraph^.WalkableSpace);
+    if spots <> [] then
+      spot := spots.NearestPoint(me);
+  end;
+  if (spot = [0, 0]) or (spot = me) then
+    Exit(False);
+
+  Result := Self.WalkBlind(spot, 4);
+end;
+
 
 (*
 ## TRSWalkerV2.GetClosestPoint
@@ -1327,14 +1456,23 @@ Method used to get the closest Point to the Player out of a TPA.
 function TRSWalkerV2.GetClosestPointEx(me: TPoint; destinations: TPointArray; out path: TPointArray): TPoint; overload;
 var
   shortPaths: T2DPointArray;
+  ordered: TPointArray;
   shortest, dist: Int32;
+  straight: Double;
   destination: TPoint;
 begin
   me := Self.Position();
   shortest := $FFFFFF;
+  // Nearest first. A path is at least the straight-line distance, so once a
+  // route is known every booth farther than that route can be skipped.
+  ordered := destinations.Sorted(me);
 
-  for destination in destinations do
+  for destination in ordered do
   begin
+    straight := me.DistanceTo(destination);
+    if straight >= (shortest + 1) then
+      Break;
+
     try
       path := Self.WebGraph^.PathBetweenEx(me, destination, 0, 4);
     except
@@ -1549,6 +1687,11 @@ begin
     Self.Fatal('TRSWalkerV2.WebWalk `PathRandomness` must be within 0..1');
 
   if (me = [0, 0]) or (destination = [0, 0]) then
+    Exit(False);
+
+  Self.StepOntoWeb();
+  me := Self.Position();
+  if me = [0, 0] then
     Exit(False);
 
   if not Self._DoorHandler.Enabled then

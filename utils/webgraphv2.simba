@@ -413,16 +413,16 @@ function TWebGraphV2.FindObjectPath(me: TPoint; out p: TPoint): TPointArray;
 var
   i, attempt: Int32;
   cluster, best: TPointArray;
-  original: TPoint;
-  pathFailed: Boolean;
+  original, nearNode: TPoint;
+  foundNear: Boolean;
 begin
   original := p;
 
   for attempt := 0 to 2 do
   begin
-    pathFailed := False;
     Result := [];
     cluster := [];
+    foundNear := False;
 
     if (me = [0, 0]) then
       Exit;
@@ -434,35 +434,41 @@ begin
           cluster := Self.WalkableClusters[i];
     end;
 
-    best := Self.FindNearestNodesEx(original, 12);
+    // The closest node can sit on the booth itself. Skip it and take the
+    // closest one the web can actually reach.
+    best := Self.FindNearestNodesEx(original, 36);
     for i := 0 to High(best) do
     begin
-      p := best[i];
+      if Self.UseCollisionData and (cluster <> []) and (not cluster.Contains(best[i])) then
+        Continue;
 
-      if (not Self.UseCollisionData) or (cluster = []) or cluster.Contains(p) then
+      try
+        Result := Self.PathBetweenEx(me, best[i], 0.2, 2);
+      except
+        Result := [];
+      end;
+
+      if Result <> [] then
       begin
-        try
-          Result := Self.PathBetweenEx(me, p, 0.2, 2);
-          if Result = [] then
-          begin
-            if me.InRange(p, 52) then Exit([p]);
-            RaiseException('Path empty');
-          end;
-          Exit;
-        except
-          if me.InRange(p, 52) then Exit([p]);
-          pathFailed := True;
-          Break;
-        end;
+        p := best[i];
+        Exit;
+      end;
+
+      if (not foundNear) and me.InRange(best[i], 52) then
+      begin
+        nearNode := best[i];
+        foundNear := True;
       end;
     end;
 
-    // No matching walkable node was attempted
-    if not pathFailed then
-      Exit;
+    if foundNear then
+    begin
+      p := nearNode;
+      Exit([p]);
+    end;
 
     if attempt = 2 then
-      RaiseException(SRL.TimeStamp() + ':[WebGraph]:[Fatal]: Can''t find a walkable path to ' + p.ToString() + ' object.');
+      Exit;
 
     if attempt = 0 then
     begin

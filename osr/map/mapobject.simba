@@ -1318,7 +1318,7 @@ RSObjects.GEBank.WalkHover();
 function TRSMapObject.WalkHover(attempts: Int32 = 2): Boolean;
 var
   p, me: TPoint;
-  path: TPointArray;
+  path, coords: TPointArray;
   same, useApproach: Boolean;
   savedScreen, savedAdaptive: Boolean;
   savedTarget: TStringArray;
@@ -1337,11 +1337,23 @@ begin
 
   if Self.Filter.UpText then Self.Walker^.TargetUpText := Copy(Self.UpText);
 
-  me :=  Self.Walker^.Position();
+  Self.Walker^.StepOntoWeb();
+  me := Self.Walker^.Position();
   if (me = [0, 0]) or (Length(Self.Coordinates) = 0) then
     Exit(False);
 
-  p := Self.Walker^.GetClosestPointEx(me, Self.GetWalkCoordinates(), path);
+  // Path to the closest tile. A farther tile that happens to connect, such as
+  // another bank booth, is not a closer bank.
+  coords := Self.GetWalkCoordinates();
+  p := coords.NearestPoint(me);
+  path := [];
+  try
+    path := Self.Walker^.WebGraph^.PathBetweenEx(me, p, 0, 4);
+  except
+    path := [];
+  end;
+  if path <> [] then
+    p := path[High(path)];
   useApproach := Length(Self.WalkCoordinates) > 0;
 
   // Walk to the tile in front of the object with screen-clicking off. Clicking

@@ -1,3 +1,12 @@
+## [8.5.3](https://github.com/BigWaspBackup/SRL-B/compare/v8.5.2...v8.5.3) (2026-11-13)
+
+
+### Bug Fixes
+
+* Improvements to finding objects in all scripts ([a2d62f4](https://github.com/BigWaspBackup/SRL-B/commit/a2d62f45ae145b98c7537be7ace0adf06cc4c570))
+
+
+
 ## [8.5.2](https://github.com/BigWaspBackup/SRL-B/compare/v8.5.1...v8.5.2) (2026-11-13)
 
 
@@ -31,15 +40,6 @@
 ### Bug Fixes
 
 * Support for improved back chest finding, some fixes to uptext, minor login screen tweaks ([c1b9648](https://github.com/BigWaspBackup/SRL-B/commit/c1b9648e29b62c00f91aba3531f25567f3b454fb))
-
-
-
-## [8.4.13](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.12...v8.4.13) (2026-10-21)
-
-
-### Bug Fixes
-
-* Birdhouse tweaks ([bbffa09](https://github.com/BigWaspBackup/SRL-B/commit/bbffa09804c4552f8730ab87051a687d479322dc))
 
 
 

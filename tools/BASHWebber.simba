@@ -777,13 +777,6 @@ begin
   Self.ChunkMemo.SetTop(36);
   Self.ChunkMemo.SetWidth(420);
   Self.ChunkMemo.SetHeight(280);
-  Self.ChunkMemo.SetText(
-    '# Mahogany Homes' + LineEnding +
-    '45 53 47 51 0,1' + LineEnding +
-    '40 52 41 51 0,1' + LineEnding +
-    '49 55 51 52 0,1' + LineEnding +
-    '25 57 29 53 0,1'
-  );
 
   button.Init(Self.PickForm);
   button.SetParent(Self.PickForm);

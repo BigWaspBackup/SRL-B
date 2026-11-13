@@ -1161,6 +1161,16 @@ begin
   end;
 end;
 
+procedure LogDirectPathMiss(obj: TRSMapObject; me, target: TPoint);
+begin
+  WriteLn(SRL.TimeStamp() + ':[MapObject]: Direct path failed for "' + obj.Name + '"');
+  WriteLn('  Uptext: ', obj.UpText);
+  WriteLn('  Player: ', me.ToString(), '  Target: ', target.ToString());
+  WriteLn('  Coordinates: ', obj.Coordinates);
+  if Length(obj.WalkCoordinates) > 0 then
+    WriteLn('  Walk coordinates: ', obj.WalkCoordinates);
+end;
+
 (*
 ## TRSMapObject._WalkHoverHelper
 ```pascal
@@ -1215,13 +1225,19 @@ begin
 
     if path = [] then
     begin
-      path := Self.Walker^.WebGraph^.FindObjectPath(me, closest);
-      if path = [] then
-        RaiseException(SRL.TimeStamp() + ':[MapObject]:[Fatal]: Can''t path to object: ' + Self.Name);
+      if me.InRange(closest, 52) then
+        WriteLn(SRL.TimeStamp() + ':[MapObject]: Beside "' + Self.Name + '", clicking without a web path')
+      else
+      begin
+        LogDirectPathMiss(Self, me, closest);
+        path := Self.Walker^.WebGraph^.FindObjectPath(me, closest);
+        if (path = []) and (not me.InRange(closest, 52)) then
+          RaiseException(SRL.TimeStamp() + ':[MapObject]:[Fatal]: Can''t path to object: ' + Self.Name);
+      end;
       same := True;
     end;
 
-    if not me.InRange(closest, 50) then
+    if not me.InRange(closest, 52) then
     begin
       Self.Walker^.WebWalkEx(me, closest, 30, 0.15);
       Continue;
@@ -1229,7 +1245,7 @@ begin
 
     if attempt = (attempts - 1) then
     begin
-      if not me.InRange(closest, 25) then
+      if (not me.InRange(closest, 25)) and (Length(path) > 1) then
       begin
         Self.Walker^.WebWalkEx(me, closest, 25, 0.15);
         Continue;
@@ -1383,14 +1399,22 @@ begin
       //if the point is not reachable with the webgraph (like a banker behind a booth) then pick nearest node as target
       if path = [] then
       begin
-        path := Self.Walker^.WebGraph^.FindObjectPath(me, p);
-        if path = [] then
+        if not me.InRange(p, 52) then
+        begin
+          LogDirectPathMiss(Self, me, p);
+          path := Self.Walker^.WebGraph^.FindObjectPath(me, p);
+        end;
+        if (path = []) and (not me.InRange(p, 52)) then
           Exit(False);
+        if path = [] then
+          WriteLn(SRL.TimeStamp() + ':[MapObject]: Beside "' + Self.Name + '", clicking without a web path');
         same := True;
       end;
 
-      // check if doors need to be passed to reach target
-      if same or Self.Walker^.WebGraph^.WalkableClusters.InSameTPA(me, p) then
+      // Already in reach: turn toward it and click. A missing web node must not send us walking.
+      if me.InRange(p, 52) then
+        Self.Walker^.MakePointVisible(p)
+      else if same or Self.Walker^.WebGraph^.WalkableClusters.InSameTPA(me, p) then
       begin
         if not Self.Walker^.MakePointVisible(p) and not Self.Walker^.WebWalkEx(me, p, 30, 0.15) then
           Exit;

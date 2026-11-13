@@ -411,18 +411,31 @@ end;
 
 function TWebGraphV2.FindObjectPath(me: TPoint; out p: TPoint): TPointArray;
 var
-  i, attempt: Int32;
+  i, attempt, tried, skipped: Int32;
   cluster, best: TPointArray;
   original, nearNode: TPoint;
   foundNear: Boolean;
+  nodesText: String;
 begin
   original := p;
+
+  // The object tile often has no web node. Standing next to it is close enough to click.
+  if (me <> [0, 0]) and me.InRange(original, 52) then
+  begin
+    WriteLn(SRL.TimeStamp() + ':[WebGraph]: Beside the target (',
+            Round(me.DistanceTo(original) / RSTranslator.TileSize),
+            ' tiles), skipping the web');
+    p := original;
+    Exit([p]);
+  end;
 
   for attempt := 0 to 2 do
   begin
     Result := [];
     cluster := [];
     foundNear := False;
+    tried := 0;
+    skipped := 0;
 
     if (me = [0, 0]) then
       Exit;
@@ -440,8 +453,12 @@ begin
     for i := 0 to High(best) do
     begin
       if Self.UseCollisionData and (cluster <> []) and (not cluster.Contains(best[i])) then
+      begin
+        Inc(skipped);
         Continue;
+      end;
 
+      Inc(tried);
       try
         Result := Self.PathBetweenEx(me, best[i], 0.2, 2);
       except
@@ -467,8 +484,27 @@ begin
       Exit([p]);
     end;
 
+    nodesText := '';
+    for i := 0 to Min(2, High(best)) do
+    begin
+      if nodesText <> '' then
+        nodesText += ', ';
+      nodesText += best[i].ToString();
+    end;
+
+    WriteLn(SRL.TimeStamp() + ':[WebGraph]: Path to object failed (attempt ', attempt + 1, '/3)');
+    WriteLn('  Player: ', me.ToString(), '  Target: ', original.ToString(),
+            '  Distance: ', Round(me.DistanceTo(original) / RSTranslator.TileSize), ' tiles');
+    WriteLn('  Walkable cluster: ', Length(cluster), ' px  Nodes: ', Length(best),
+            ' tried ', tried, ', skipped ', skipped);
+    if nodesText <> '' then
+      WriteLn('  Closest nodes: ', nodesText);
+
     if attempt = 2 then
+    begin
+      WriteLn(SRL.TimeStamp() + ':[WebGraph]: Path to object failed, giving up');
       Exit;
+    end;
 
     if attempt = 0 then
     begin

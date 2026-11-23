@@ -215,11 +215,87 @@ WriteLn Login.IsReady();
 *)
 function TRSLogin.WorldSwitcherCancelBox(): TBox;
 begin
-  // White X at the top-right of the login world list. The bottom-left control opens the list.
   Result.X1 := Self.Bounds.X2 - 57;
   Result.Y1 := Self.Bounds.Y1 + 4;
   Result.X2 := Self.Bounds.X2 - 8;
   Result.Y2 := Self.Bounds.Y1 + 19;
+end;
+
+function TRSLogin.WorldButtonBox(out b: TBox): Boolean;
+var
+  worldWord, modeLine: TBox;
+  hasWorld, hasMode: Boolean;
+begin
+  hasWorld := Self.FindText('World', worldWord) and (worldWord.Y1 >= Self.Bounds.Y2 - 80);
+  hasMode := Self.FindText('Mode:', modeLine) and (modeLine.Y1 >= Self.Bounds.Y2 - 50);
+  Result := hasWorld or hasMode;
+  if not Result then
+    Exit;
+
+  if hasWorld and hasMode then
+  begin
+    b.X1 := Min(worldWord.X1, modeLine.X1);
+    b.Y1 := Min(worldWord.Y1, modeLine.Y1);
+    b.X2 := Max(worldWord.X2, modeLine.X2);
+    b.Y2 := Max(worldWord.Y2, modeLine.Y2);
+  end
+  else if hasWorld then
+    b := worldWord
+  else
+    b := modeLine;
+
+  b.X1 -= 6;
+  b.Y1 -= 4;
+  b.X2 += 28;
+  b.Y2 += 4;
+end;
+
+function TRSLogin.ClickWorldButton(): Boolean;
+var
+  b: TBox;
+begin
+  Result := Self.WorldButtonBox(b);
+  if Result then
+    Mouse.Click(b, MOUSE_LEFT);
+end;
+
+function TRSLogin.ReadWhiteWorldNumber(area: TBox): Int32;
+var
+  filter: TOCRColorFilter;
+  typed, fromText: Int32;
+  digits: String;
+begin
+  filter := TOCRColorFilter.Create([$FFFFFF]);
+  typed := OCR.RecognizeNumber(area, filter, RS_FONT_BOLD_12);
+  if not InRange(typed, 201, 999) then
+    Exit;
+
+  digits := ExtractFromStr(OCR.Recognize(area, filter, RS_FONT_BOLD_12), Numbers);
+  if Length(digits) = 0 then
+    Exit(typed);
+
+  fromText := StrToIntDef(digits, 0);
+  if (Length(digits) = 3) and (fromText = typed) then
+    Result := typed;
+end;
+
+function TRSLogin.LoginWorldRowAllowed(numberBox: TBox): Boolean;
+var
+  icon: TBox;
+begin
+  if Self.AllowDangerousWorlds then
+    Exit(True);
+
+  icon := numberBox;
+  icon.X1 := numberBox.X2 + 1;
+  icon.X2 := numberBox.X2 + 22;
+  icon.Y1 := numberBox.Y1 - 3;
+  icon.Y2 := numberBox.Y2 + 3;
+
+  Result := (SRL.CountColor(CTS1(1880517, 40), icon) >= 8) or
+            (SRL.CountColor(CTS1(4089471, 20), icon) >= 8) or
+            (SRL.CountColor(CTS1(4089471, 20), numberBox) > 0) or
+            (SRL.CountColor(CTS1(8421504, 25), icon) >= 12);
 end;
 
 function TRSLogin.IsReady(): Boolean;
@@ -282,23 +358,29 @@ var
   filter: TOCRColorFilter;
   digits: String;
 begin
-  filter := TOCRColorFilter.Create([$000000]);
+  filter := TOCRColorFilter.Create([$FFFFFF]);
 
   for attempt := 1 to 2 do
   begin
     Self.DebugLn('Looking for world ' + ToString(World) + ' on the login world list');
-    if OCR.LocateText(Self.Bounds, ToString(World), RS_FONT_BOLD_12, filter, b) <> 1 then
+    if OCR.LocateText(Self.Bounds, ToString(World), RS_FONT_PLAIN_11, filter, b) <> 1 then
     begin
       Self.DebugLn('World ' + ToString(World) + ' was not found on this page');
       Exit;
     end;
 
-    readNumber := OCR.RecognizeNumber(b, filter, RS_FONT_BOLD_12);
-    digits := ExtractFromStr(OCR.Recognize(b, filter, RS_FONT_BOLD_12), Numbers);
+    if b.X1 > Self.Bounds.X1 + 140 then
+    begin
+      Self.DebugLn('World ' + ToString(World) + ' match at ' + ToStr(b) + ' is outside the world column');
+      Exit(False);
+    end;
+
+    readNumber := OCR.RecognizeNumber(b, filter, RS_FONT_PLAIN_11);
+    digits := ExtractFromStr(OCR.Recognize(b, filter, RS_FONT_PLAIN_11), Numbers);
     wide := b;
-    wide.X1 -= 6;
-    wide.X2 += 6;
-    wideNumber := OCR.RecognizeNumber(wide, filter, RS_FONT_BOLD_12);
+    wide.X1 -= 4;
+    wide.X2 += 4;
+    wideNumber := OCR.RecognizeNumber(wide, filter, RS_FONT_PLAIN_11);
 
     if (readNumber <> World) or (wideNumber <> World) or
        ((digits <> '') and (digits <> ToString(World))) then
@@ -311,15 +393,10 @@ begin
 
     Self.DebugLn('World ' + ToString(World) + ' confirmed on the list at ' + ToStr(b));
 
-    if (not Self.AllowDangerousWorlds) then
+    if not Self.LoginWorldRowAllowed(b) then
     begin
-      // Retry instead of term on danger
-      if (SRL.CountColor(CTS1(4089471, 20), b) = 0) and
-         (SRL.CountColor(CTS1(8421504, 25), b) = 0) then
-      begin
-        Self.DebugLn('Skipping world ' + ToString(World) + ' - no members/F2P star color in the world-number box (dangerous world or false OCR match)');
-        Exit(False);
-      end;
+      Self.DebugLn('Skipping world ' + ToString(World) + ' - no members star beside the world number');
+      Exit(False);
     end;
 
     Self.DebugLn('Clicking world ' + ToString(World) + ' at ' + ToStr(b));
@@ -342,7 +419,7 @@ WriteLn Login.IsOpen();
 *)
 function TRSLogin.IsOpen(): Boolean;
 begin
-  Result := Self.FindText('Click to switch');
+  Result := Self.FindText('Mode:');
 end;
 
 (*
@@ -359,6 +436,9 @@ WriteLn Login.IsWorldSwitcherOpen();
 *)
 function TRSLogin.IsWorldSwitcherOpen(): Boolean;
 begin
+  if Self.FindText('Confirm') or Self.FindText('Sort by') then
+    Exit(True);
+
   if SRL.CountColor($FFFFFF, Self.WorldSwitcherCancelBox()) >= 61 then
   begin
     if Self.FindText('CLICK HERE TO PLAY') then
@@ -387,7 +467,7 @@ begin
   if Self.IsWorldSwitcherOpen() then
     Exit(True);
 
-  Result := ClickText('Click to switch') and WaitUntil(Self.IsWorldSwitcherOpen(), 500, 5000);
+  Result := Self.ClickWorldButton() and WaitUntil(Self.IsWorldSwitcherOpen(), 500, 5000);
 end;
 
 (*
@@ -408,10 +488,11 @@ begin
   if not Self.IsWorldSwitcherOpen() then
     Exit(True);
 
-  if SRL.CountColor($FFFFFF, Self.WorldSwitcherCancelBox()) >= 61 then
-    Mouse.Click(Self.WorldSwitcherCancelBox(), MOUSE_LEFT)
-  else if not Self.ClickText('Cancel') then
-    Exit(False);
+  if not Self.ClickText('Confirm') then
+    if SRL.CountColor($FFFFFF, Self.WorldSwitcherCancelBox()) >= 61 then
+      Mouse.Click(Self.WorldSwitcherCancelBox(), MOUSE_LEFT)
+    else if not Self.ClickText('Cancel') then
+      Exit(False);
 
   Result := WaitUntil(not Self.IsWorldSwitcherOpen(), 100, 3000);
 end;
@@ -429,46 +510,20 @@ WriteLn Login.GetCurrentWorld();
 ```
 *)
 function TRSLogin.ReadLoginWorldSample(): Int32;
-
-  function Agreed(area: TBox): Int32;
-  var
-    filter: TOCRColorFilter;
-    typed, fromText: Int32;
-    digits: String;
-  begin
-    filter := TOCRColorFilter.Create([$FFFFFF]);
-    typed := OCR.RecognizeNumber(area, filter, RS_FONT_BOLD_12);
-    if not InRange(typed, 301, 999) then
-      Exit;
-
-    digits := ExtractFromStr(OCR.Recognize(area, filter, RS_FONT_BOLD_12), Numbers);
-    if Length(digits) = 0 then
-      Exit(typed);
-
-    fromText := StrToIntDef(digits, 0);
-    if (Length(digits) = 3) and (fromText = typed) then
-      Result := typed;
-  end;
-
 var
-  b, line: TBox;
+  worldWord, line: TBox;
 begin
-  if not Self.FindText('Click to switch', b) then
+  if not Self.FindText('World', worldWord) then
+    Exit;
+  if worldWord.Y1 < Self.Bounds.Y2 - 80 then
     Exit;
 
-  line := b;
-  line.X1 := b.X1 - 10;
-  line.X2 := b.X2 + 10;
-  line.Y2 := b.Y1 - 1;
-  line.Y1 := b.Y1 - 24;
-  Result := Agreed(line);
-  if Result <> 0 then
-    Exit;
-
-  // Older read: the line above the button, still including the button text.
-  line := b;
-  line.Y1 := b.Y1 - 25;
-  Result := Agreed(line);
+  line := worldWord;
+  line.X1 := worldWord.X2 + 1;
+  line.X2 := worldWord.X2 + 36;
+  line.Y1 := worldWord.Y1 - 2;
+  line.Y2 := worldWord.Y2 + 2;
+  Result := Self.ReadWhiteWorldNumber(line);
 end;
 
 function TRSLogin.GetCurrentWorld(): Int32;
@@ -581,9 +636,11 @@ begin
   Result := True;
   if worlds = [] then
   begin
-    Self.DebugLn('No worlds configured, leaving the current login world');
+    WriteLn('[LOGIN] Player worlds: none. Not hopping');
     Exit;
   end;
+
+  WriteLn('[LOGIN] Player worlds: ', ToStr(worlds));
 
   current := Self.GetCurrentWorld();
   if current = 0 then
@@ -592,17 +649,17 @@ begin
     Exit(False);
   end;
 
-  Self.DebugLn('Login world is ' + ToString(current) + '. Configured worlds: ' + ToStr(worlds) + '. randomHop=' + ToStr(randomHop) + ' hopChance=' + ToString(hopChance));
+  WriteLn('[LOGIN] Current world: ', current, '. randomHop=', randomHop, ' hopChance=', hopChance);
   shouldHop := not (current in worlds);
   if shouldHop then
-    Self.DebugLn('Hopping because world ' + ToString(current) + ' is not in the configured list')
+    WriteLn('[LOGIN] Hopping. World ', current, ' is not in the player worlds')
   else if randomHop and SRL.Dice(hopChance) then
   begin
     shouldHop := True;
-    Self.DebugLn('Random login hop rolled (' + ToString(hopChance) + '%). This is separate from the world hop checkbox');
+    WriteLn('[LOGIN] Random login hop rolled (', hopChance, '%). Choosing from the player worlds');
   end
   else
-    Self.DebugLn('Staying on world ' + ToString(current));
+    WriteLn('[LOGIN] Staying on world ', current);
 
   if shouldHop then
   begin
@@ -614,7 +671,7 @@ begin
         Continue;
       tried += target;
 
-      Self.DebugLn('Login hop target ' + ToString(target) + ' (picked from configured worlds, not from the world shown on screen)');
+      WriteLn('[LOGIN] Hop target: ', target);
       if Self.SwitchToWorld(target) then
       begin
         current := Self.GetCurrentWorld();
@@ -1053,7 +1110,7 @@ begin
   end;
 
   if not Self.IsOpen() then
-    Self.DebugLn('Login screen is not open (Click to switch was not found). Skipping world select and the play click');
+    Self.DebugLn('Login screen is not open (Mode: was not found). Skipping world select and the play click');
 
   while Self.IsOpen() and (attempts < 10) do
   begin
@@ -1142,7 +1199,7 @@ begin
   end;
 
   if not Self.IsOpen() then
-    Self.DebugLn('Login screen is not open (Click to switch was not found). Skipping world select and the play click');
+    Self.DebugLn('Login screen is not open (Mode: was not found). Skipping world select and the play click');
 
   while Self.IsOpen() and (attempts < 10) do
   begin

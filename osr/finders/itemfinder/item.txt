@@ -6839,75 +6839,109 @@ anger spear
 jug of vinegar
 pot of vinegar
 goblin skull
-bone in vinegar
+goblin skull in vinegar
 goblin skull
 bear ribs
+bear ribs in vinegar
 bear ribs
 ram skull
+ram skull in vinegar
 ram skull
 unicorn bone
+unicorn bone in vinegar
 unicorn bone
 giant rat bone
+giant rat bone in vinegar
 giant rat bone
 giant bat wing
+giant bat wing in vinegar
 giant bat wing
 wolf bone
+wolf bone in vinegar
 wolf bone
 bat wing
+bat wing in vinegar
 bat wing
 rat bone
+rat bone in vinegar
 rat bone
 baby dragon bone
+baby dragon bone in vinegar
 baby dragon bone
 ogre ribs
+ogre ribs in vinegar
 ogre ribs
 jogre bone
+jogre bone in vinegar
 jogre bone
 zogre bone
+zogre bone in vinegar
 zogre bone
 mogre bone
+mogre bone in vinegar
 mogre bone
 monkey paw
+monkey paw in vinegar
 monkey paw
 dagannoth ribs
+dagannoth ribs in vinegar
 dagannoth ribs
 snake spine
+snake spine in vinegar
 snake spine
 zombie bone
+zombie bone in vinegar
 zombie bone
 werewolf bone
+werewolf bone in vinegar
 werewolf bone
 moss giant bone
+moss giant bone in vinegar
 moss giant bone
 fire giant bone
+fire giant bone in vinegar
 fire giant bone
 ice giant ribs
+ice giant ribs in vinegar
 ice giant ribs
 terrorbird wing
+terrorbird wing in vinegar
 terrorbird wing
 ghoul bone
+ghoul bone in vinegar
 ghoul bone
 troll bone
+troll bone in vinegar
 troll bone
 seagull wing
+seagull wing in vinegar
 seagull wing
 undead cow ribs
+undead cow ribs in vinegar
 undead cow ribs
 experiment bone
+experiment bone in vinegar
 experiment bone
 rabbit bone
+rabbit bone in vinegar
 rabbit bone
 basilisk bone
+basilisk bone in vinegar
 basilisk bone
 desert lizard bone
+desert lizard bone in vinegar
 desert lizard bone
 cave goblin skull
+cave goblin skull in vinegar
 cave goblin skull
 big frog leg
+big frog leg in vinegar
 big frog leg
 vulture wing
+vulture wing in vinegar
 vulture wing
 jackal bone
+jackal bone in vinegar
 jackal bone
 ram skull helm
 bonesack
@@ -11497,7 +11531,6 @@ cadantine seed
 lantadyme seed
 dwarf weed seed
 torstol seed
-bandana eyepatch (white)
 bag full of gems
 achievement diary cape
 light ballista
@@ -20243,10 +20276,6 @@ zorya's tome (uncharged)
 noted zorya's tome (uncharged)
 alliance log
 leftovers
-candy onion
-sugar
-molten sugar
-old onion
 vampyre monocle
 vampyre costume top
 vampyre costume bottom
@@ -20282,6 +20311,119 @@ pink snelm
 noted pink snelm
 honey buzzard
 black honey buzzard
+communication cabbage
+the bib vol. 1: seeds of truth
+seed of growth
+cabbage water
+brassican sentience potion
+blessed compost
+all potions are gazpacho vol. 2: the cabbage years
+sprout spy
+perfect cabbage
+perfect potato
+perfect rosemary
+perfect cabbage stew
+prayer to brassica
+sedridor's staff
+asylum key
+magic lamp (prayer)
+magic lamp (slayer)
+condition notes
+heavy bonesack
+heavy bonesack (open)
+gatestone
+gatestone
+angry giant rat bone in vinegar
+ankou bone in vinegar
+armoured zombie bone in vinegar
+aviansie wing in vinegar
+blue dragon bone in vinegar
+boar bone in vinegar
+catablepon ribs in vinegar
+cave horror bone in vinegar
+chicken wing in vinegar
+colonel radick's bone in vinegar
+cow bone in vinegar
+crawling hand bone in vinegar
+crocodile bone in vinegar
+cyclops bone in vinegar
+druid ribs in vinegar
+fox bone in vinegar
+frogeel spine in vinegar
+gnome child bone in vinegar
+goat ribs in vinegar
+hill giant bone in vinegar
+infernal mage bone in vinegar
+lizardman bone in vinegar
+lynx bone in vinegar
+minotaur bone in vinegar
+ork skull in vinegar
+sorebones bone in vinegar
+tortoise bone in vinegar
+turoth leg in vinegar
+ugthanki ribs in vinegar
+wallasalki bone in vinegar
+angry giant rat bone
+ankou bone
+armoured zombie bone
+aviansie wing
+blue dragon bone
+boar bone
+catablepon ribs
+cave horror bone
+chicken wing
+colonel radick's bone
+cow bone
+crawling hand bone
+crocodile bone
+cyclops bone
+druid ribs
+fox bone
+frogeel spine
+gnome child bone
+goat ribs
+hill giant bone
+infernal mage bone
+lizardman bone
+lynx bone
+minotaur bone
+ork skull
+sorebones bone
+tortoise bone
+turoth leg
+ugthanki ribs
+wallasalki bone
+angry giant rat bone
+ankou bone
+armoured zombie bone
+aviansie wing
+blue dragon bone
+boar bone
+catablepon ribs
+cave horror bone
+chicken wing
+colonel radick's bone
+cow bone
+crawling hand bone
+crocodile bone
+cyclops bone
+druid ribs
+fox bone
+frogeel spine
+gnome child bone
+goat ribs
+hill giant bone
+infernal mage bone
+lizardman bone
+lynx bone
+minotaur bone
+ork skull
+sorebones bone
+tortoise bone
+turoth leg
+ugthanki ribs
+wallasalki bone
+guthixian root
 marrentill seed
 marrentill seed
 marrentill seed

@@ -1,3 +1,12 @@
+## [8.5.4](https://github.com/BigWaspBackup/SRL-B/compare/v8.5.3...v8.5.4) (2026-11-23)
+
+
+### Bug Fixes
+
+* Added support for latest game assets/bone bags, Support for latest world selection menu, More debug to world hopping, Webgraph fixes for few more locations. ([20601a2](https://github.com/BigWaspBackup/SRL-B/commit/20601a27d178f172407a62d7ad0d0f5bf2f7a1d5))
+
+
+
 ## [8.5.3](https://github.com/BigWaspBackup/SRL-B/compare/v8.5.2...v8.5.3) (2026-11-13)
 
 
@@ -31,15 +40,6 @@
 ### Features
 
 * Prepared support for new BashLauncher, Fixes for tormented demons due to latest game update. ([5111322](https://github.com/BigWaspBackup/SRL-B/commit/51113228596f54e887d78076f6901eb7c48e31e5))
-
-
-
-## [8.4.14](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.13...v8.4.14) (2026-10-24)
-
-
-### Bug Fixes
-
-* Support for improved back chest finding, some fixes to uptext, minor login screen tweaks ([c1b9648](https://github.com/BigWaspBackup/SRL-B/commit/c1b9648e29b62c00f91aba3531f25567f3b454fb))
 
 
 

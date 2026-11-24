@@ -287,15 +287,16 @@ begin
     Exit(True);
 
   icon := numberBox;
-  icon.X1 := numberBox.X2 + 1;
-  icon.X2 := numberBox.X2 + 22;
-  icon.Y1 := numberBox.Y1 - 3;
-  icon.Y2 := numberBox.Y2 + 3;
+  icon.X1 := numberBox.X1 + 64;
+  icon.X2 := numberBox.X1 + 88;
+  icon.Y1 := numberBox.Y1 - 2;
+  icon.Y2 := numberBox.Y2 + 2;
 
   Result := (SRL.CountColor(CTS1(1880517, 40), icon) >= 8) or
             (SRL.CountColor(CTS1(4089471, 20), icon) >= 8) or
             (SRL.CountColor(CTS1(4089471, 20), numberBox) > 0) or
-            (SRL.CountColor(CTS1(8421504, 25), icon) >= 12);
+            (SRL.CountColor(CTS1(8421504, 25), icon) >= 12) or
+            (SRL.CountColor(CTS1($C0C0C0, 36), icon) >= 12);
 end;
 
 function TRSLogin.IsReady(): Boolean;
@@ -357,30 +358,34 @@ var
   b, wide: TBox;
   filter: TOCRColorFilter;
   digits: String;
+  list: TBox;
 begin
-  filter := TOCRColorFilter.Create([$FFFFFF]);
+  filter := TOCRColorFilter.Create([$000000], [20]);
+  list := Self.Bounds;
+  list.Y1 := Self.Bounds.Y1 + 48;
+  list.X2 := Self.Bounds.X1 + 520;
 
   for attempt := 1 to 2 do
   begin
     Self.DebugLn('Looking for world ' + ToString(World) + ' on the login world list');
-    if OCR.LocateText(Self.Bounds, ToString(World), RS_FONT_PLAIN_11, filter, b) <> 1 then
+    if OCR.LocateText(list, ToString(World), RS_FONT_BOLD_12, filter, b) <> 1 then
     begin
       Self.DebugLn('World ' + ToString(World) + ' was not found on this page');
       Exit;
     end;
 
-    if b.X1 > Self.Bounds.X1 + 140 then
+    if b.X1 > Self.Bounds.X1 + 520 then
     begin
-      Self.DebugLn('World ' + ToString(World) + ' match at ' + ToStr(b) + ' is outside the world column');
+      Self.DebugLn('World ' + ToString(World) + ' match at ' + ToStr(b) + ' is outside the world list');
       Exit(False);
     end;
 
-    readNumber := OCR.RecognizeNumber(b, filter, RS_FONT_PLAIN_11);
-    digits := ExtractFromStr(OCR.Recognize(b, filter, RS_FONT_PLAIN_11), Numbers);
+    readNumber := OCR.RecognizeNumber(b, filter, RS_FONT_BOLD_12);
+    digits := ExtractFromStr(OCR.Recognize(b, filter, RS_FONT_BOLD_12), Numbers);
     wide := b;
-    wide.X1 -= 4;
-    wide.X2 += 4;
-    wideNumber := OCR.RecognizeNumber(wide, filter, RS_FONT_PLAIN_11);
+    wide.X1 -= 2;
+    wide.X2 += 2;
+    wideNumber := OCR.RecognizeNumber(wide, filter, RS_FONT_BOLD_12);
 
     if (readNumber <> World) or (wideNumber <> World) or
        ((digits <> '') and (digits <> ToString(World))) then
@@ -395,7 +400,7 @@ begin
 
     if not Self.LoginWorldRowAllowed(b) then
     begin
-      Self.DebugLn('Skipping world ' + ToString(World) + ' - no members star beside the world number');
+      Self.DebugLn('Skipping world ' + ToString(World) + ' - no members or free-world star beside the world number');
       Exit(False);
     end;
 

@@ -1,3 +1,12 @@
+## [8.5.5](https://github.com/BigWaspBackup/SRL-B/compare/v8.5.4...v8.5.5) (2026-11-24)
+
+
+### Bug Fixes
+
+* Bump ([03799d9](https://github.com/BigWaspBackup/SRL-B/commit/03799d9abeff3509928a76d84b62d7b4502d54b7))
+
+
+
 ## [8.5.4](https://github.com/BigWaspBackup/SRL-B/compare/v8.5.3...v8.5.4) (2026-11-23)
 
 
@@ -31,15 +40,6 @@
 ### Bug Fixes
 
 * BASH Launcher 2.0 Support ([4992ef2](https://github.com/BigWaspBackup/SRL-B/commit/4992ef2fc92698b29794d7305e1536127228e525))
-
-
-
-# [8.5.0](https://github.com/BigWaspBackup/SRL-B/compare/v8.4.14...v8.5.0) (2026-10-26)
-
-
-### Features
-
-* Prepared support for new BashLauncher, Fixes for tormented demons due to latest game update. ([5111322](https://github.com/BigWaspBackup/SRL-B/commit/51113228596f54e887d78076f6901eb7c48e31e5))
 
 
 

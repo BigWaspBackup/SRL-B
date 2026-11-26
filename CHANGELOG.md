@@ -1,3 +1,12 @@
+## [8.5.6](https://github.com/BigWaspBackup/SRL-B/compare/v8.5.5...v8.5.6) (2026-11-26)
+
+
+### Bug Fixes
+
+* Updated assets for latest game update ([4e7abe4](https://github.com/BigWaspBackup/SRL-B/commit/4e7abe473f7e1913359e32aba72af4bda24ad179))
+
+
+
 ## [8.5.5](https://github.com/BigWaspBackup/SRL-B/compare/v8.5.4...v8.5.5) (2026-11-24)
 
 
@@ -31,15 +40,6 @@
 ### Bug Fixes
 
 * Improved walker on all scripts when walking longer distances, updated for latest game update. ([fcc4738](https://github.com/BigWaspBackup/SRL-B/commit/fcc47382ee27dfff5b644f99143373af1cfdb719))
-
-
-
-## [8.5.1](https://github.com/BigWaspBackup/SRL-B/compare/v8.5.0...v8.5.1) (2026-10-30)
-
-
-### Bug Fixes
-
-* BASH Launcher 2.0 Support ([4992ef2](https://github.com/BigWaspBackup/SRL-B/commit/4992ef2fc92698b29794d7305e1536127228e525))
 
 
 

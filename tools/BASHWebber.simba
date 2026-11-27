@@ -757,7 +757,7 @@ begin
     The course and the Ardougne return tile are always included.
     Each farm line is one patch location. Delete a line to leave that patch out.
     The CIR line only loads when a patch travels through the guild fairy ring.
-    Overlapping lines are safe. Map load keeps one webgraph for each cell. }
+    Lines that touch or overlap load as one map, so the webgraph connects across them. }
   Result :=
     '# Ardougne rooftop, planes 0-3' + LineEnding +
     '38 53 43 49 0,1,2,3' + LineEnding +

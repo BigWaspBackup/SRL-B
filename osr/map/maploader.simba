@@ -1405,67 +1405,33 @@ begin
   Result := Box(Min(b.X1, b.X2), Min(b.Y1, b.Y2), Max(b.X1, b.X2), Max(b.Y1, b.Y2));
 end;
 
-function _MapChunkArea(b: TBox): Int32;
-begin
-  Result := (b.X2 - b.X1 + 1) * (b.Y2 - b.Y1 + 1);
-end;
-
 function _MapChunkSame(a, b: TBox): Boolean;
 begin
   Result := (a.X1 = b.X1) and (a.Y1 = b.Y1) and (a.X2 = b.X2) and (a.Y2 = b.Y2);
 end;
 
-function _MapChunkOverlaps(a, b: TBox): Boolean;
-begin
-  Result := (a.X1 <= b.X2) and (a.X2 >= b.X1) and (a.Y1 <= b.Y2) and (a.Y2 >= b.Y1);
-end;
-
-function _MapChunkContains(outer, inner: TBox): Boolean;
-begin
-  Result := (inner.X1 >= outer.X1) and (inner.X2 <= outer.X2) and
-            (inner.Y1 >= outer.Y1) and (inner.Y2 <= outer.Y2);
-end;
-
-procedure _MapChunkSubtract(a, cut: TBox; var pieces: TBoxArray);
+function _MapChunkJoins(a, b: TBox): Boolean;
 var
-  inter: TBox;
+  xOverlap, yOverlap, xTouch, yTouch: Boolean;
 begin
-  if not _MapChunkOverlaps(a, cut) then
-  begin
-    pieces += a;
-    Exit;
-  end;
-
-  if _MapChunkContains(cut, a) then
-    Exit;
-
-  inter := Box(Max(a.X1, cut.X1), Max(a.Y1, cut.Y1), Min(a.X2, cut.X2), Min(a.Y2, cut.Y2));
-  if a.Y1 < inter.Y1 then
-    pieces += Box(a.X1, a.Y1, a.X2, inter.Y1 - 1);
-  if a.Y2 > inter.Y2 then
-    pieces += Box(a.X1, inter.Y2 + 1, a.X2, a.Y2);
-  if a.X1 < inter.X1 then
-    pieces += Box(a.X1, inter.Y1, inter.X1 - 1, inter.Y2);
-  if a.X2 > inter.X2 then
-    pieces += Box(inter.X2 + 1, inter.Y1, a.X2, inter.Y2);
+  xOverlap := (a.X1 <= b.X2) and (a.X2 >= b.X1);
+  yOverlap := (a.Y1 <= b.Y2) and (a.Y2 >= b.Y1);
+  xTouch := (a.X2 + 1 = b.X1) or (b.X2 + 1 = a.X1);
+  yTouch := (a.Y2 + 1 = b.Y1) or (b.Y2 + 1 = a.Y1);
+  Result := (xOverlap and yOverlap) or (xOverlap and yTouch) or (yOverlap and xTouch);
 end;
 
-procedure _MapSortBoxes(var boxes: TBoxArray);
+function _MapChunkBounds(boxes: TBoxArray): TBox;
 var
-  i, j, best: Int32;
-  swap: TBox;
+  i: Int32;
 begin
-  for i := 0 to High(boxes) - 1 do
+  Result := boxes[0];
+  for i := 1 to High(boxes) do
   begin
-    best := i;
-    for j := i + 1 to High(boxes) do
-      if _MapChunkArea(boxes[j]) > _MapChunkArea(boxes[best]) then
-        best := j;
-    if best = i then
-      Continue;
-    swap := boxes[i];
-    boxes[i] := boxes[best];
-    boxes[best] := swap;
+    Result.X1 := Min(Result.X1, boxes[i].X1);
+    Result.Y1 := Min(Result.Y1, boxes[i].Y1);
+    Result.X2 := Max(Result.X2, boxes[i].X2);
+    Result.Y2 := Max(Result.Y2, boxes[i].Y2);
   end;
 end;
 
@@ -1483,30 +1449,19 @@ begin
       end;
 end;
 
-procedure _MapCopyBoxes(src: TBoxArray; var dst: TBoxArray);
-var
-  i: Int32;
-begin
-  SetLength(dst, Length(src));
-  for i := 0 to High(src) do
-    dst[i] := src[i];
-end;
-
 (*
-Drops chunk cells that are already covered on the same plane.
-The largest rectangle keeps the shared cells, so its webgraph stays one piece.
-A smaller chunk that only partly overlaps is cut down to the cells it alone covers.
+Chunks that overlap or share a side become one rectangle.
+The webgraph is built on that one map, so the nodes connect across the join.
 *)
 function TRSMapLoader.UniqueChunks(chunks: array of TRSMapChunk): array of TRSMapChunk;
 var
-  i, j, n, p, plane, inCount, outCount: Int32;
-  planes, group, flatPlanes: TIntegerArray;
-  boxes, kept, remain, next, flatBoxes: TBoxArray;
-  used: array of Boolean;
+  i, j, k, n, p, plane, qh: Int32;
+  planes, group, queue, flatPlanes: TIntegerArray;
+  boxes, comp, flatBoxes: TBoxArray;
+  seen: array of Boolean;
+  bounds: TBox;
 begin
   for i := 0 to High(chunks) do
-  begin
-    inCount += Length(chunks[i].Planes);
     for j := 0 to High(chunks[i].Planes) do
     begin
       plane := chunks[i].Planes[j];
@@ -1520,7 +1475,6 @@ begin
       if n < 0 then
         planes += plane;
     end;
-  end;
 
   _MapSortPlanes(planes);
 
@@ -1533,54 +1487,61 @@ begin
         if chunks[i].Planes[j] = plane then
           boxes += _MapChunkNorm(chunks[i].Chunk);
 
-    _MapSortBoxes(boxes);
-    kept := [];
+    SetLength(seen, Length(boxes));
+    for i := 0 to High(seen) do
+      seen[i] := False;
+
     for i := 0 to High(boxes) do
     begin
-      SetLength(remain, 1);
-      remain[0] := boxes[i];
-      for j := 0 to High(kept) do
-      begin
-        next := [];
-        for p := 0 to High(remain) do
-          _MapChunkSubtract(remain[p], kept[j], next);
-        _MapCopyBoxes(next, remain);
-        if Length(remain) = 0 then
-          Break;
-      end;
-      for p := 0 to High(remain) do
-        kept += remain[p];
-    end;
+      if seen[i] then
+        Continue;
 
-    for i := 0 to High(kept) do
-    begin
-      flatBoxes += kept[i];
+      queue := [i];
+      qh := 0;
+      seen[i] := True;
+      comp := [boxes[i]];
+      while qh <= High(queue) do
+      begin
+        k := queue[qh];
+        qh += 1;
+        for j := 0 to High(boxes) do
+          if (not seen[j]) and _MapChunkJoins(boxes[k], boxes[j]) then
+          begin
+            seen[j] := True;
+            comp += boxes[j];
+            queue += j;
+          end;
+      end;
+
+      bounds := _MapChunkBounds(comp);
+      if Length(comp) > 1 then
+        Self.DebugLn('Joined chunks into ' + ToStr(bounds.X1) + ' ' + ToStr(bounds.Y2) + ' ' +
+                     ToStr(bounds.X2) + ' ' + ToStr(bounds.Y1) + ' plane ' + ToStr(plane));
+      flatBoxes += bounds;
       flatPlanes += plane;
     end;
   end;
 
-  SetLength(used, Length(flatBoxes));
+  SetLength(seen, Length(flatBoxes));
+  for i := 0 to High(seen) do
+    seen[i] := False;
+
   for i := 0 to High(flatBoxes) do
   begin
-    if used[i] then
+    if seen[i] then
       Continue;
 
     group := [flatPlanes[i]];
-    used[i] := True;
+    seen[i] := True;
     for j := i + 1 to High(flatBoxes) do
-      if (not used[j]) and _MapChunkSame(flatBoxes[i], flatBoxes[j]) then
+      if (not seen[j]) and _MapChunkSame(flatBoxes[i], flatBoxes[j]) then
       begin
         group += flatPlanes[j];
-        used[j] := True;
+        seen[j] := True;
       end;
 
     Result += Chunk(Box(flatBoxes[i].X1, flatBoxes[i].Y2, flatBoxes[i].X2, flatBoxes[i].Y1), group);
-    outCount += Length(group);
   end;
-
-  if inCount <> outCount then
-    Self.DebugLn('Overlapping map chunks collapsed from ' + ToStr(inCount) +
-                 ' plane-regions to ' + ToStr(outCount));
 end;
 
 procedure TRSMapLoader.Load(chunks: array of TRSMapChunk; downscale: UInt32 = 8; padding: UInt32 = 40); overload;

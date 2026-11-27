@@ -1,3 +1,12 @@
+## [8.5.7](https://github.com/BigWaspBackup/SRL-B/compare/v8.5.6...v8.5.7) (2026-11-27)
+
+
+### Bug Fixes
+
+* Webgraph fixes for Ardy and a few misc locations ([54a7ae6](https://github.com/BigWaspBackup/SRL-B/commit/54a7ae6f3c57898e4835b293cb2aa25d93b0e37a))
+
+
+
 ## [8.5.6](https://github.com/BigWaspBackup/SRL-B/compare/v8.5.5...v8.5.6) (2026-11-26)
 
 
@@ -31,15 +40,6 @@
 ### Bug Fixes
 
 * Improvements to finding objects in all scripts ([a2d62f4](https://github.com/BigWaspBackup/SRL-B/commit/a2d62f45ae145b98c7537be7ace0adf06cc4c570))
-
-
-
-## [8.5.2](https://github.com/BigWaspBackup/SRL-B/compare/v8.5.1...v8.5.2) (2026-11-13)
-
-
-### Bug Fixes
-
-* Improved walker on all scripts when walking longer distances, updated for latest game update. ([fcc4738](https://github.com/BigWaspBackup/SRL-B/commit/fcc47382ee27dfff5b644f99143373af1cfdb719))
 
 
 

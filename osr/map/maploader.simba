@@ -1400,6 +1400,189 @@ begin
   end;
 end;
 
+function _MapChunkNorm(b: TBox): TBox;
+begin
+  Result := Box(Min(b.X1, b.X2), Min(b.Y1, b.Y2), Max(b.X1, b.X2), Max(b.Y1, b.Y2));
+end;
+
+function _MapChunkArea(b: TBox): Int32;
+begin
+  Result := (b.X2 - b.X1 + 1) * (b.Y2 - b.Y1 + 1);
+end;
+
+function _MapChunkSame(a, b: TBox): Boolean;
+begin
+  Result := (a.X1 = b.X1) and (a.Y1 = b.Y1) and (a.X2 = b.X2) and (a.Y2 = b.Y2);
+end;
+
+function _MapChunkOverlaps(a, b: TBox): Boolean;
+begin
+  Result := (a.X1 <= b.X2) and (a.X2 >= b.X1) and (a.Y1 <= b.Y2) and (a.Y2 >= b.Y1);
+end;
+
+function _MapChunkContains(outer, inner: TBox): Boolean;
+begin
+  Result := (inner.X1 >= outer.X1) and (inner.X2 <= outer.X2) and
+            (inner.Y1 >= outer.Y1) and (inner.Y2 <= outer.Y2);
+end;
+
+procedure _MapChunkSubtract(a, cut: TBox; var pieces: TBoxArray);
+var
+  inter: TBox;
+begin
+  if not _MapChunkOverlaps(a, cut) then
+  begin
+    pieces += a;
+    Exit;
+  end;
+
+  if _MapChunkContains(cut, a) then
+    Exit;
+
+  inter := Box(Max(a.X1, cut.X1), Max(a.Y1, cut.Y1), Min(a.X2, cut.X2), Min(a.Y2, cut.Y2));
+  if a.Y1 < inter.Y1 then
+    pieces += Box(a.X1, a.Y1, a.X2, inter.Y1 - 1);
+  if a.Y2 > inter.Y2 then
+    pieces += Box(a.X1, inter.Y2 + 1, a.X2, a.Y2);
+  if a.X1 < inter.X1 then
+    pieces += Box(a.X1, inter.Y1, inter.X1 - 1, inter.Y2);
+  if a.X2 > inter.X2 then
+    pieces += Box(inter.X2 + 1, inter.Y1, a.X2, inter.Y2);
+end;
+
+procedure _MapSortBoxes(var boxes: TBoxArray);
+var
+  i, j, best: Int32;
+  swap: TBox;
+begin
+  for i := 0 to High(boxes) - 1 do
+  begin
+    best := i;
+    for j := i + 1 to High(boxes) do
+      if _MapChunkArea(boxes[j]) > _MapChunkArea(boxes[best]) then
+        best := j;
+    if best = i then
+      Continue;
+    swap := boxes[i];
+    boxes[i] := boxes[best];
+    boxes[best] := swap;
+  end;
+end;
+
+procedure _MapSortPlanes(var planes: TIntegerArray);
+var
+  i, j, swap: Int32;
+begin
+  for i := 0 to High(planes) - 1 do
+    for j := i + 1 to High(planes) do
+      if planes[j] < planes[i] then
+      begin
+        swap := planes[i];
+        planes[i] := planes[j];
+        planes[j] := swap;
+      end;
+end;
+
+procedure _MapCopyBoxes(src: TBoxArray; var dst: TBoxArray);
+var
+  i: Int32;
+begin
+  SetLength(dst, Length(src));
+  for i := 0 to High(src) do
+    dst[i] := src[i];
+end;
+
+(*
+Drops chunk cells that are already covered on the same plane.
+The largest rectangle keeps the shared cells, so its webgraph stays one piece.
+A smaller chunk that only partly overlaps is cut down to the cells it alone covers.
+*)
+function TRSMapLoader.UniqueChunks(chunks: array of TRSMapChunk): array of TRSMapChunk;
+var
+  i, j, n, p, plane, inCount, outCount: Int32;
+  planes, group, flatPlanes: TIntegerArray;
+  boxes, kept, remain, next, flatBoxes: TBoxArray;
+  used: array of Boolean;
+begin
+  for i := 0 to High(chunks) do
+  begin
+    inCount += Length(chunks[i].Planes);
+    for j := 0 to High(chunks[i].Planes) do
+    begin
+      plane := chunks[i].Planes[j];
+      n := -1;
+      for p := 0 to High(planes) do
+        if planes[p] = plane then
+        begin
+          n := p;
+          Break;
+        end;
+      if n < 0 then
+        planes += plane;
+    end;
+  end;
+
+  _MapSortPlanes(planes);
+
+  for n := 0 to High(planes) do
+  begin
+    plane := planes[n];
+    boxes := [];
+    for i := 0 to High(chunks) do
+      for j := 0 to High(chunks[i].Planes) do
+        if chunks[i].Planes[j] = plane then
+          boxes += _MapChunkNorm(chunks[i].Chunk);
+
+    _MapSortBoxes(boxes);
+    kept := [];
+    for i := 0 to High(boxes) do
+    begin
+      SetLength(remain, 1);
+      remain[0] := boxes[i];
+      for j := 0 to High(kept) do
+      begin
+        next := [];
+        for p := 0 to High(remain) do
+          _MapChunkSubtract(remain[p], kept[j], next);
+        _MapCopyBoxes(next, remain);
+        if Length(remain) = 0 then
+          Break;
+      end;
+      for p := 0 to High(remain) do
+        kept += remain[p];
+    end;
+
+    for i := 0 to High(kept) do
+    begin
+      flatBoxes += kept[i];
+      flatPlanes += plane;
+    end;
+  end;
+
+  SetLength(used, Length(flatBoxes));
+  for i := 0 to High(flatBoxes) do
+  begin
+    if used[i] then
+      Continue;
+
+    group := [flatPlanes[i]];
+    used[i] := True;
+    for j := i + 1 to High(flatBoxes) do
+      if (not used[j]) and _MapChunkSame(flatBoxes[i], flatBoxes[j]) then
+      begin
+        group += flatPlanes[j];
+        used[j] := True;
+      end;
+
+    Result += Chunk(Box(flatBoxes[i].X1, flatBoxes[i].Y2, flatBoxes[i].X2, flatBoxes[i].Y1), group);
+    outCount += Length(group);
+  end;
+
+  if inCount <> outCount then
+    Self.DebugLn('Overlapping map chunks collapsed from ' + ToStr(inCount) +
+                 ' plane-regions to ' + ToStr(outCount));
+end;
+
 procedure TRSMapLoader.Load(chunks: array of TRSMapChunk; downscale: UInt32 = 8; padding: UInt32 = 40); overload;
 var
   i, j, idx: Int32;
@@ -1409,10 +1592,12 @@ var
   json: TJSONArray;
   objects, npcs: array of TJSONArray;
   name: String;
+  list: array of TRSMapChunk;
 begin
   Self.Init(downscale);
+  list := Self.UniqueChunks(chunks);
 
-  for i := 0 to High(chunks) do j += Length(chunks[i].Planes);
+  for i := 0 to High(list) do j += Length(list[i].Planes);
 
   SetLength(Self.Regions, 0);
   SetLength(Self.Regions, j);
@@ -1420,42 +1605,42 @@ begin
   Self.Padding := padding;
   idx := -1;
 
-  for i := 0 to High(chunks) do
-    for j := 0 to High(chunks[i].Planes) do
+  for i := 0 to High(list) do
+    for j := 0 to High(list[i].Planes) do
     begin
       idx += 1;
-      name := Self._GetChunk(chunks[i].Chunk, s, f);
-      Self.Regions[idx].Name :=  ToStr(chunks[i].Planes[j]) + '_' + name;
-      Self.Regions[idx].Original := RSTranslator.Chunk2Coordinate(chunks[i].Chunk);
+      name := Self._GetChunk(list[i].Chunk, s, f);
+      Self.Regions[idx].Name :=  ToStr(list[i].Planes[j]) + '_' + name;
+      Self.Regions[idx].Original := RSTranslator.Chunk2Coordinate(list[i].Chunk);
 
-      if chunks[i].Planes[j] > 0 then
-        Self.Regions[idx].Original := Self.Regions[idx].Original.Offset([RSTranslator.MapWidth() * chunks[i].Planes[j], 0]);
+      if list[i].Planes[j] > 0 then
+        Self.Regions[idx].Original := Self.Regions[idx].Original.Offset([RSTranslator.MapWidth() * list[i].Planes[j], 0]);
 
-      Self.Regions[idx].Plane := chunks[i].Planes[j];
+      Self.Regions[idx].Plane := list[i].Planes[j];
 
       tmp :=  RSTranslator.Chunk2Coordinate(s);
-      tmp.X += RSTranslator.MapWidth() * chunks[i].Planes[j]; //easy way to handle upper levels
+      tmp.X += RSTranslator.MapWidth() * list[i].Planes[j]; //easy way to handle upper levels
       Self.Regions[idx].Offset := [tmp.X-padding, tmp.Y - padding];
 
-      bitmaps += Self.Loader.GetMap(s, f, chunks[i].Planes[j], ERSMap.NORMAL);
+      bitmaps += Self.Loader.GetMap(s, f, list[i].Planes[j], ERSMap.NORMAL);
       bitmaps[idx].Pad(padding);
 
-      if chunks[i].Planes[j] = 0 then
+      if list[i].Planes[j] = 0 then
       begin
         hbitmaps += Self.Loader.GetMap(s, f, 0, ERSMap.HEIGHT);
         hbitmaps[High(hbitmaps)].Pad(padding);
       end;
 
-      cbitmaps += Self.Loader.GetMap(s, f, chunks[i].Planes[j], ERSMap.COLLISION);
+      cbitmaps += Self.Loader.GetMap(s, f, list[i].Planes[j], ERSMap.COLLISION);
 
       if not GENERATED_GRAPH.Disabled then
-        graphs += Self.SetupGraph(name, idx, chunks[i].Planes[j], padding, cbitmaps[idx]);
+        graphs += Self.SetupGraph(name, idx, list[i].Planes[j], padding, cbitmaps[idx]);
 
       cbitmaps[idx].Pad(padding);
 
-      json := Self.Loader.GetJSON(s, f, chunks[i].Planes[j], ERSMapJSON.OBJECTS);
+      json := Self.Loader.GetJSON(s, f, list[i].Planes[j], ERSMapJSON.OBJECTS);
       objects += json;
-      json := Self.Loader.GetJSON(s, f, chunks[i].Planes[j], ERSMapJSON.NPCS);
+      json := Self.Loader.GetJSON(s, f, list[i].Planes[j], ERSMapJSON.NPCS);
       npcs += json;
 
       Self.Regions[idx].Region := Box(0, 0, bitmaps[idx].GetWidth(), bitmaps[idx].GetHeight());

@@ -751,6 +751,42 @@ begin
   Self.PickForm.Close();
 end;
 
+function TWebber.ArdyFarmChunks(): String;
+begin
+  { Same regions AIO Agility loads for Ardougne Rooftop with farm runs.
+    The course and the Ardougne return tile are always included.
+    Each farm line is one patch location. Delete a line to leave that patch out.
+    The CIR line only loads when a patch travels through the guild fairy ring.
+    Overlapping lines are safe. Map load keeps one webgraph for each cell. }
+  Result :=
+    '# Ardougne rooftop, planes 0-3' + LineEnding +
+    '38 53 43 49 0,1,2,3' + LineEnding +
+    '# Ardougne teleport and cloak landing' + LineEnding +
+    '40 52 42 50 0,1,2,3' + LineEnding +
+    '# Farm patches' + LineEnding +
+    '40 53 42 51 0' + LineEnding +
+    '45 53 49 49 0' + LineEnding +
+    '42 55 45 53 0' + LineEnding +
+    '26 56 29 53 0' + LineEnding +
+    '54 56 59 53 0' + LineEnding +
+    '43 62 45 60 0' + LineEnding +
+    '43 58 45 56 0' + LineEnding +
+    '56 54 58 52 0' + LineEnding +
+    '18 59 21 57 0' + LineEnding +
+    '23 50 27 46 0' + LineEnding +
+    '49 51 51 49 0' + LineEnding +
+    '48 55 51 53 0' + LineEnding +
+    '45 53 47 51 0' + LineEnding +
+    '44 54 47 51 0' + LineEnding +
+    '37 55 39 52 0' + LineEnding +
+    '41 55 45 52 0' + LineEnding +
+    '37 50 40 47 0' + LineEnding +
+    '42 51 44 49 0' + LineEnding +
+    '35 50 37 48 0' + LineEnding +
+    '# Guild fairy ring CIR, only when a patch uses that travel' + LineEnding +
+    '# 38 51 42 48 0';
+end;
+
 function TWebber.PickChunks(): Boolean;
 var
   caption: TLabel;
@@ -762,35 +798,36 @@ begin
   Self.PickForm.SetPosition(poScreenCenter);
   Self.PickForm.SetCaption('BASH Webber');
   Self.PickForm.SetWidth(460);
-  Self.PickForm.SetHeight(420);
+  Self.PickForm.SetHeight(640);
 
   caption.Init(Self.PickForm);
   caption.SetParent(Self.PickForm);
   caption.SetLeft(12);
   caption.SetTop(12);
   caption.SetWidth(430);
-  caption.SetCaption('One chunk per line: x1 y1 x2 y2 planes');
+  caption.SetCaption('Ardougne rooftop with farm runs. One chunk per line: x1 y1 x2 y2 planes');
 
   Self.ChunkMemo.Init(Self.PickForm);
   Self.ChunkMemo.SetParent(Self.PickForm);
   Self.ChunkMemo.SetLeft(12);
   Self.ChunkMemo.SetTop(36);
   Self.ChunkMemo.SetWidth(420);
-  Self.ChunkMemo.SetHeight(280);
+  Self.ChunkMemo.SetHeight(500);
+  Self.ChunkMemo.SetText(Self.ArdyFarmChunks());
 
   button.Init(Self.PickForm);
   button.SetParent(Self.PickForm);
-  button.SetBounds(12, 332, 200, 32);
+  button.SetBounds(12, 548, 200, 32);
   button.SetCaption('Open');
   button.SetOnClick(@Self.OnOpenClick);
 
   button.Init(Self.PickForm);
   button.SetParent(Self.PickForm);
-  button.SetBounds(232, 332, 200, 32);
+  button.SetBounds(232, 548, 200, 32);
   button.SetCaption('Cancel');
   button.SetOnClick(@Self.OnCancelClick);
 
-  WriteLn('Type the chunks to load. One line is x1 y1 x2 y2, then the planes.');
+  WriteLn('Ardougne rooftop and farm-run chunks are filled in. Delete any patch you are not running, then click Open.');
   Self.PickForm.ShowModal();
   Self.PickForm.Free();
   Result := Self.Opened;

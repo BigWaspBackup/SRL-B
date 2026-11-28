@@ -1530,3 +1530,8 @@ var
 Global TRSMap variable
 *)
   {$H-}Map: TRSMap;{$H+}
+
+procedure SRLMapDebugPosition();
+begin
+  Map.DebugPosition();
+end;

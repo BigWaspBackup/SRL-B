@@ -10,6 +10,8 @@ iterations made by Olly.
   {$I SRL-T/osr.simba}
 {$ENDIF}
 
+procedure SRLMapDebugPosition(); forward;
+
 type
 (*
 ## PRSWalkerV2
@@ -1659,6 +1661,8 @@ function TRSWalkerV2.WebWalkEx(me: TPoint; destination: TPoint; waitUntilDistanc
           bmp.Debug();
           bmp.Free();
         end;
+        if Pos('don''t connect', msg) > 0 then
+          SRLMapDebugPosition();
         RaiseException(msg);
       end;
 

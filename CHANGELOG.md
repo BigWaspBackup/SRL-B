@@ -1,3 +1,12 @@
+## [8.5.9](https://github.com/BigWaspBackup/SRL-B/compare/v8.5.8...v8.5.9) (2026-11-28)
+
+
+### Bug Fixes
+
+* Added Debug for walker ([70d9134](https://github.com/BigWaspBackup/SRL-B/commit/70d9134ed238e6b6a9e7fd0e8f9642452f960f55))
+
+
+
 ## [8.5.8](https://github.com/BigWaspBackup/SRL-B/compare/v8.5.7...v8.5.8) (2026-11-27)
 
 
@@ -31,15 +40,6 @@
 ### Bug Fixes
 
 * Bump ([03799d9](https://github.com/BigWaspBackup/SRL-B/commit/03799d9abeff3509928a76d84b62d7b4502d54b7))
-
-
-
-## [8.5.4](https://github.com/BigWaspBackup/SRL-B/compare/v8.5.3...v8.5.4) (2026-11-23)
-
-
-### Bug Fixes
-
-* Added support for latest game assets/bone bags, Support for latest world selection menu, More debug to world hopping, Webgraph fixes for few more locations. ([20601a2](https://github.com/BigWaspBackup/SRL-B/commit/20601a27d178f172407a62d7ad0d0f5bf2f7a1d5))
 
 
 
